@@ -4,3 +4,9 @@
 .httr-oauth
 .DS_Store
 .quarto
+# Ignore all files inside inst/extdata/
+inst/extdata/*
+
+# But keep the folder
+!inst/extdata/.gitkeep
+
