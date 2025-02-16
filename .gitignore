@@ -10,3 +10,6 @@ inst/extdata/*
 # But keep the folder
 !inst/extdata/.gitkeep
 
+inst/doc
+/doc/
+/Meta/
