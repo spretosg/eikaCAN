@@ -18,43 +18,43 @@ app_ui <- function(request) {
       tabsetPanel(id = "inTabset",
 
                   tabPanel("Hva er særlig viktig natur?", value = "p1",
-                           # dataUI("data")
+                           mod_data_ui("data")
                            ),
 
-                  tabPanel("Aktsomhetsvurdering", value = "p2",
-                           br(),
-                           h2("Hvordan vil du gjennomføre en aktsomhetsvurdering av vesentlig klima & naturrisiko i virksomheten?"),
-                           br(),
-                           br(),
-                           bslib::value_box(
-                             title = "",
-                             value = "",
-                             br(),
-                             actionButton("matrikkel","Bruk et matrikkelnummer"),
-                             br(),
-                             actionButton("poly_up","Last opp et romlig datasett"),
-                             br(),
-                             actionButton("draw_pol","Tegn direkte på kartet"),
-                             theme = bslib::value_box_theme(bg = main_green, fg = "black"),
-                             showcase= bsicons::bs_icon("book")
-                           )),
-
-
-                  # tabPanel("Sammenlign prosjekter", value = "p3",
+                  # tabPanel("Aktsomhetsvurdering", value = "p2",
                   #          br(),
-                  #          map_screenUI("compare")),
-                  tabPanel("Arealstatistikk", value = "p4",
-                           # uiOutput("bygg_stats")
-                  ),
-                  tabPanel("", value = "p5",
-                           # upload_screenUI("upload")
-                  ),
-                  tabPanel("", value = "p6",
-                           # matrikkel_screenUI("matrikkel")
-                  ),
-                  tabPanel("", value = "p7",
-                           # map_screenUI("draw")
-                  )
+                  #          h2("Hvordan vil du gjennomføre en aktsomhetsvurdering av vesentlig klima & naturrisiko i virksomheten?"),
+                  #          br(),
+                  #          br(),
+                  #          bslib::value_box(
+                  #            title = "",
+                  #            value = "",
+                  #            br(),
+                  #            actionButton("matrikkel","Bruk et matrikkelnummer"),
+                  #            br(),
+                  #            actionButton("poly_up","Last opp et romlig datasett"),
+                  #            br(),
+                  #            actionButton("draw_pol","Tegn direkte på kartet"),
+                  #            theme = bslib::value_box_theme(bg = main_green, fg = "black"),
+                  #            showcase= bsicons::bs_icon("book")
+                  #          )),
+                  #
+                  #
+                  # # tabPanel("Sammenlign prosjekter", value = "p3",
+                  # #          br(),
+                  # #          map_screenUI("compare")),
+                  # # tabPanel("Arealstatistikk", value = "p4",
+                  # #          # uiOutput("bygg_stats")
+                  # # ),
+                  # tabPanel("", value = "p5",
+                  #          # upload_screenUI("upload")
+                  # ),
+                  # tabPanel("", value = "p6",
+                  #          # matrikkel_screenUI("matrikkel")
+                  # ),
+                  # tabPanel("", value = "p7",
+                  #          # map_screenUI("draw")
+                  # )
 
       )
     )

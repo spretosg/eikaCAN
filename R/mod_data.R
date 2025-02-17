@@ -7,6 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#' @import dplyr
 mod_data_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
@@ -16,8 +17,8 @@ mod_data_ui <- function(id) {
       title = "",
       value = "",
       h4("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av svært viktig natur». Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med gjeldende byggeforskrifter."),
-      theme = value_box_theme(bg = main_green, fg = "black"),
-      showcase= bs_icon("book"),
+      theme = bslib::value_box_theme(bg = main_green, fg = "black"),
+      showcase= bsicons::bs_icon("book"),
       # iframe <- tags$iframe(
       #   src = "https://github.com/NINAnor/nature_fakta_ark/utva_truede_nattype.html", # Replace with the actual URL
       #   height = "600px",
@@ -49,7 +50,7 @@ mod_data_ui <- function(id) {
 
     mainPanel(
 
-      leafletOutput(ns("map"), height = "600px"),
+      leaflet::leafletOutput(ns("map"), height = "600px"),
       shinydashboard::box(title = "Enkel forklaring ",
                           status = "primary",
                           solidHeader = TRUE,
@@ -74,7 +75,7 @@ mod_data_ui <- function(id) {
 #' data Server Functions
 #'
 #' @noRd
-mod_data_server <- function(id, adm_unit, kom_dat,vern,bbox,nat_ku){
+mod_data_server <- function(id, adm_unit, kom_dat, vern, bbox, nat_ku, inon, vassdrag, nin){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
@@ -84,7 +85,9 @@ mod_data_server <- function(id, adm_unit, kom_dat,vern,bbox,nat_ku){
 
     vectors <- list(
       "nat_vern" = vern,
-      "nat_ku" = nat_ku
+      "nat_ku" = nat_ku,
+      "inon" = inon,
+      "water" = vassdrag
     )
 
     # Placeholder for layer descriptions
@@ -123,12 +126,12 @@ mod_data_server <- function(id, adm_unit, kom_dat,vern,bbox,nat_ku){
     )
 
     # Render Leaflet map
-    output$map <- renderLeaflet({
-      leaflet() %>%
-        addTiles() %>%
-        addPolygons(data= kom_dat,color = "orange", weight = 3, smoothFactor = 0.5,
+    output$map <- leaflet::renderLeaflet({
+      leaflet::leaflet() %>%
+        leaflet::addTiles() %>%
+        leaflet::addPolygons(data= kom_dat,color = "orange", weight = 3, smoothFactor = 0.5,
                     opacity = 1.0, fillOpacity = 0)%>%
-        setView(lng =mean(bbox$xmin,bbox$xmax) , lat = mean(bbox$ymin,bbox$ymax), zoom = 9)
+        leaflet::setView(lng =mean(bbox$xmin,bbox$xmax) , lat = mean(bbox$ymin,bbox$ymax), zoom = 9)
     })
 
     # Observe layer selection
@@ -137,19 +140,19 @@ mod_data_server <- function(id, adm_unit, kom_dat,vern,bbox,nat_ku){
       selected_layer <- input$layer_select
 
       vectors_selected <- vectors[[selected_layer]]
-      if(is.null(class(vectors_selected))){
-
+      if(!is.null(class(vectors_selected))){
+        vectors_selected <- vectors[[selected_layer]]
       }else{
         vectors_selected<-vectors[[1]]
       }
 
-      vectors_selected <- st_transform(vectors_selected, CRS("+proj=longlat +datum=WGS84"))
+      vectors_selected <- sf::st_transform(vectors_selected, sp::CRS("+proj=longlat +datum=WGS84"))
 
-      leafletProxy("map") %>%
-        clearShapes()%>%
-        addPolygons(data= kom_dat, color = "orange", weight = 3, smoothFactor = 0.5,
+      leaflet::leafletProxy("map") %>%
+        leaflet::clearShapes()%>%
+        leaflet::addPolygons(data= kom_dat, color = "orange", weight = 3, smoothFactor = 0.5,
                     opacity = 1.0, fillOpacity = 0)%>%
-        addPolygons(data = vectors_selected,
+        leaflet::addPolygons(data = vectors_selected,
                     color = "green",  # Customize color if needed
                     weight = 2,      # Adjust line weight if desired
                     fillOpacity = 0.5)
