@@ -21,23 +21,9 @@ app_ui <- function(request) {
                            mod_data_ui("data")
                            ),
 
-                  # tabPanel("Aktsomhetsvurdering", value = "p2",
-                  #          br(),
-                  #          h2("Hvordan vil du gjennomføre en aktsomhetsvurdering av vesentlig klima & naturrisiko i virksomheten?"),
-                  #          br(),
-                  #          br(),
-                  #          bslib::value_box(
-                  #            title = "",
-                  #            value = "",
-                  #            br(),
-                  #            actionButton("matrikkel","Bruk et matrikkelnummer"),
-                  #            br(),
-                  #            actionButton("poly_up","Last opp et romlig datasett"),
-                  #            br(),
-                  #            actionButton("draw_pol","Tegn direkte på kartet"),
-                  #            theme = bslib::value_box_theme(bg = main_green, fg = "black"),
-                  #            showcase= bsicons::bs_icon("book")
-                  #          )),
+                  tabPanel("Aktsomhetsvurdering", value = "p2",
+                           mod_matrikkel_screen_ui("screen_main")
+                           ),
                   #
                   #
                   # # tabPanel("Sammenlign prosjekter", value = "p3",

@@ -11,15 +11,19 @@ Imports:
     bsicons,
     bslib,
     config,
+    dplyr,
     golem,
+    leaflet,
     shiny,
     shinydashboard,
     shinythemes
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
+Config/testthat/edition: 3

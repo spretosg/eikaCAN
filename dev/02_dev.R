@@ -17,10 +17,12 @@
 ## Amend DESCRIPTION with dependencies read from package code parsing
 ## install.packages('attachment') # if needed.
 attachment::att_amend_desc()
+usethis::use_package("leaflet")
+usethis::use_package("dplyr")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
-golem::add_module(name = "name_of_module1", with_test = TRUE) # Name of the module
+golem::add_module(name = "mod_data", with_test = TRUE) # Name of the module
 golem::add_module(name = "name_of_module2", with_test = TRUE) # Name of the module
 
 ## Add helper functions ----

@@ -8,6 +8,15 @@
 #'
 #' @importFrom shiny NS tagList
 #' @import dplyr
+#' @import shinyalert
+#' @import shinybusy
+#' @import sf
+#' @import terra
+#' @import shinythemes
+#' @import bslib
+#' @import bsicons
+#' @import leaflet
+#' @import shinydashboard
 mod_data_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
@@ -19,38 +28,38 @@ mod_data_ui <- function(id) {
       h4("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av svært viktig natur». Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med gjeldende byggeforskrifter."),
       theme = bslib::value_box_theme(bg = main_green, fg = "black"),
       showcase= bsicons::bs_icon("book"),
-      # iframe <- tags$iframe(
-      #   src = "https://github.com/NINAnor/nature_fakta_ark/utva_truede_nattype.html", # Replace with the actual URL
-      #   height = "600px",
-      #   width = "100%"
-      # ),
     ),
     br(),
     sidebarPanel(
       selectInput(
         ns("layer_select"),
         "Velg et kartlag for ”særlig viktig natur”",
-        choices = c("", "Naturvernområder" = "nat_vern",
-                    "Utvalgte og truede naturtyper" = "nat_ku",
-                    "Myrområder" = "myr",
-                    "Villreinområder" = "rein",
-                    "Pressområder i strandsonen"="press_strand",
-                    "Inngrepsfri natur"="inon",
-                    "Vassdragsnatur"="water",
-                    "Bymarker, regionale friluftslivområder" = "friluft",
-                    "Naturskog" = "forest",
-                    "Naturtyper av forvaltningsinteresse" = "nat_type"
+        choices = list(
+          "Særlig viktig natur" = c("Naturvernområder" = "nat_vern",
+                                    "Myrområder" = "myr",
+                                    "Villreinområder" = "rein",
+                                    "Pressområder i strandsonen"="press_strand",
+                                    "Inngrepsfri natur"="inon",
+                                    "Vassdragsnatur"="water"),
+          "Andre viktige naturverdier" = c("Utvalgte og truede naturtyper" = "nat_ku",
+                                           "Bymarker, regionale friluftslivområder" = "friluft",
+                                           "Naturskog" = "forest"),
+          "Områder av høy klimarelevans" = c("Flom" = "flood")
         ),
+
         selected = NULL
       ),
       tags$hr(),
-      imageOutput(ns("layer_image"), height = "300px"),
+      tags$head(tags$style(HTML("
+      #layer_image img { max-width: 100%; height: auto; }
+    "))),
+      imageOutput(ns("layer_image"), height = "200px"),
       textOutput(ns("layer_description_short"))
     ),
 
     mainPanel(
 
-      leaflet::leafletOutput(ns("map"), height = "600px"),
+      leaflet::leafletOutput(ns("data_map"), height = "600px"),
       shinydashboard::box(title = "Enkel forklaring ",
                           status = "primary",
                           solidHeader = TRUE,
@@ -75,63 +84,112 @@ mod_data_ui <- function(id) {
 #' data Server Functions
 #'
 #' @noRd
-mod_data_server <- function(id, adm_unit, kom_dat, vern, bbox, nat_ku, inon, vassdrag, nin){
+mod_data_server <- function(id, adm_unit, in_files){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    output$title<-renderUI({
-      h2(paste0("Naturverdier i ", as.character(adm_unit)," kommune"))
+      output$title<-renderUI({
+      h2(paste0("Naturverdier og klima aspekter i ", as.character(adm_unit)," kommune"))
     })
 
-    vectors <- list(
-      "nat_vern" = vern,
-      "nat_ku" = nat_ku,
-      "inon" = inon,
-      "water" = vassdrag
+    # vectors <- list(
+    #   "nat_vern" = vern,
+    #   "nat_ku" = nat_ku,
+    #   "inon" = inon,
+    #   "water" = vassdrag
+    # )
+      kom_dat<-in_files$kom_dat
+      bbox<-in_files$bbox
+
+    wms_url <- list(
+      "flood" = "https://nve.geodataonline.no:443/arcgis/services/FlomAktsomhet/MapServer/WmsServer",
+      "inon" = "https://kart.miljodirektoratet.no/geoserver/inngrepsfrinatur/wms",
+      # "forest" = "https://image001.miljodirektoratet.no:443/arcgis/services/naturskog/naturskog_v1/mapserver/WMSServer",
+      "nat_vern"= "https://kart.miljodirektoratet.no/arcgis/services/vern/mapserver/WMSServer",
+      "rein" = "https://kart.miljodirektoratet.no/arcgis/services/villrein/mapserver/WMSServer",
+      "nat_ku" = "https://kart.miljodirektoratet.no/arcgis/services/naturtyper_kuverdi/mapserver/WMSServer"
+    )
+
+    legend_url <- list(
+      "flood" = "https://nve.geodataonline.no:443/arcgis/services/FlomAktsomhet/MapServer/WmsServer?request=GetLegendGraphic%26version=1.3.0%26format=image/png%26layer=MaksimalVannstandstigning",
+      "inon" = "https://kart.miljodirektoratet.no/geoserver/inngrepsfrinatur/wms?request=GetLegendGraphic&version=1.1.1&format=image%2Fpng&width=20&height=20&layer=status",
+      # "forest" = ""
+      "nat_vern" = "https://kart.miljodirektoratet.no/arcgis/services/vern/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=naturvern_klasser_omrade",
+      "rein" = "https://kart.miljodirektoratet.no/arcgis/services/villrein/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=villrein_leveomrade",
+      "nat_ku" = "https://kart.miljodirektoratet.no/arcgis/services/naturtyper_kuverdi/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=kuverdi_naturtype_alle"
+    )
+    layer <-list(
+      "flood" = "Flom_aktsomhetsomrade",
+      "inon" = "Status inngr.fri natur 2023",
+      "nat_vern" = "naturvern_klasser_omrade",
+      "rein" = "villrein_leveomrade",
+      "nat_ku" = "kuverdi_naturtype_alle"
+
     )
 
     # Placeholder for layer descriptions
     layer_description_short <- list(
-      "nat_vern" = "Kort beskrivelse for Naturvernområder: This is the first data layer.",
-      "nat_ku" = "Kort beskrivelse for Utvalgte og truede naturtyper: This is the second data layer.",
-      "press_strand" = "Kort beskrivelse for pressoner i strandsone: This is the third data layer.",
-      "myr" = "Kort beskrivelse for Utvalgte og truede naturtyper: This is the fourth data layer.",
-      "inon" = "Kort beskrivelse for Inngrepsfrie naturområder: This is the second data layer.",
-      "villrein" = "Kort beskrivelse for Villrein: This is the second data layer."
+      "nat_vern" = "Kort beskrivelse for Naturvernområder data layer.",
+      "nat_ku" = "Kort beskrivelse for Naturvernområder data layer.",
+      "press_strand" = "Kort beskrivelse for pressområder i strandsonen data layer.",
+      "myr" = "Kort beskrivelse for myr data layer.",
+      "inon" = "Kort beskrivelse for inngrepsfri natur data layer.",
+      "rein" = "Kort beskrivelse for villreinområder data layer.",
+      "water" = "Kort beskrivelse for vassdragsnatur data layer.",
+      "friluft" = "Kort beskrivelse for verdsatte friluftsliv områder data layer.",
+      "forest" = "Kort beskrivelse for vernskog data layer.",
+      "flood" = "Kort beskrivelse for flom sone data layer."
     )
 
     layer_description_long <- list(
-      "nat_vern" = "Long description for Naturvernområder",
-      "nat_ku" = "Description for Layer 2: This is the second data layer."
+      "nat_vern" = "Long beskrivelse for Naturvernområder data layer.",
+      "nat_ku" = "Long beskrivelse for Naturvernområder data layer.",
+      "press_strand" = "Long beskrivelse for pressområder i strandsonen data layer.",
+      "myr" = "Long beskrivelse for myr data layer.",
+      "inon" = "Long beskrivelse for inngrepsfri natur data layer.",
+      "rein" = "Long beskrivelse for villreinområder data layer.",
+      "water" = "Long beskrivelse for vassdragsnatur data layer.",
+      "friluft" = "Long beskrivelse for verdsatte friluftsliv områder data layer.",
+      "forest" = "Long beskrivelse for vernskog data layer.",
+      "flood" = "Long beskrivelse for flom sone data layer."
     )
 
     layer_description_easy <- list(
-      "nat_vern" = "Easy description for Naturvernområder",
-      "nat_ku" = "Før en utbygging skal utbygger gjøre en konsekvensvurdering for ulike naturtyper.  Miljødirektoratet har samlet de viktigste naturtypene i et kart for å gjør det enklere å konsekvensvurdere.  Likevel viste NRK saken Norge i Rødt Hvitt og Grått at vi fortsatt bygger på truet natur og natur som er sentrale levesteder for truede arter. Eksempler på en truet naturtype er slåtteeng, kystgranskog, grisehalekorallbunn og kalksjø .  Nesten halvparten av alle truede arter har sitt leveområde helt eller delvis i skog."
-    )
+      "nat_vern" = "Easy beskrivelse for Naturvernområder data layer.",
+      "nat_ku" = "Easy beskrivelse for Naturvernområder data layer.",
+      "press_strand" = "Easy beskrivelse for pressområder i strandsonen data layer.",
+      "myr" = "Easy beskrivelse for myr data layer.",
+      "inon" = "Easy beskrivelse for inngrepsfri natur data layer.",
+      "rein" = "Easy beskrivelse for villreinområder data layer.",
+      "water" = "Easy beskrivelse for vassdragsnatur data layer.",
+      "friluft" = "Easy beskrivelse for verdsatte friluftsliv områder data layer.",
+      "forest" = "Easy beskrivelse for vernskog data layer.",
+      "flood" = "Easy beskrivelse for flom sone data layer."
+      )
 
 
 
     # Placeholder for layer images
     layer_images <- list(
-      "nat_vern" = "data/layer_pictures/vern.jpg",
-      "nat_ku" = "data/layer_pictures/utv_trued_nattype.png",
-      "friluft" = "data/layer_pictures/friluft.jpg",
-      "inon" = "data/layer_pictures/inon.jpg",
-      "myr" = "data/layer_pictures/myr.jpg",
-      "press_strand" = "data/layer_pictures/press_strand.jpg",
-      "water" = "data/layer_pictures/vassdrag.jpg",
-      "skog" = "data/layer_pictures/vernskog.jpg",
-      "rein" = "data/layer_pictures/villrein.jpg"
+      "nat_vern" = "layer_pictures/vern.jpg",
+      "nat_ku" = "layer_pictures/utv_trued_nattype.png",
+      "friluft" = "layer_pictures/friluft.jpg",
+      "inon" = "layer_pictures/inon.jpg",
+      "myr" = "layer_pictures/myr.jpg",
+      "press_strand" = "layer_pictures/press_strand.jpg",
+      "water" = "layer_pictures/vassdrag.jpg",
+      "forest" = "layer_pictures/vernskog.jpg",
+      "rein" = "layer_pictures/villrein.jpg",
+      "flood" = "layer_pictures/flood.jpg"
     )
 
     # Render Leaflet map
-    output$map <- leaflet::renderLeaflet({
+    output$data_map <- leaflet::renderLeaflet({
       leaflet::leaflet() %>%
         leaflet::addTiles() %>%
         leaflet::addPolygons(data= kom_dat,color = "orange", weight = 3, smoothFactor = 0.5,
                     opacity = 1.0, fillOpacity = 0)%>%
-        leaflet::setView(lng =mean(bbox$xmin,bbox$xmax) , lat = mean(bbox$ymin,bbox$ymax), zoom = 9)
+        leaflet::setView(lng =mean(bbox$xmin,bbox$xmax) , lat = mean(bbox$ymin,bbox$ymax), zoom = 10)
     })
 
     # Observe layer selection
@@ -139,30 +197,59 @@ mod_data_server <- function(id, adm_unit, kom_dat, vern, bbox, nat_ku, inon, vas
       req(input$layer_select)
       selected_layer <- input$layer_select
 
-      vectors_selected <- vectors[[selected_layer]]
-      if(!is.null(class(vectors_selected))){
-        vectors_selected <- vectors[[selected_layer]]
+      wms_selected <- wms_url[[selected_layer]]
+      legend_selected <-legend_url[[selected_layer]]
+      layer_selected <-layer[[selected_layer]]
+
+      if(is.null(wms_selected) | is.null(legend_selected)){
+        #empty leaflet proxy map
+        leaflet::leafletProxy("data_map")%>%
+          leaflet::clearTiles()%>%
+          leaflet::clearControls()%>%
+          leaflet::addTiles()
       }else{
-        vectors_selected<-vectors[[1]]
+        leaflet::leafletProxy("data_map") %>%
+          leaflet::clearTiles()%>%
+          leaflet::clearControls()%>%
+          leaflet::addTiles() %>%
+          leaflet::addWMSTiles(
+            baseUrl = wms_selected,
+            layers = layer_selected,
+            options = leaflet::WMSTileOptions(
+              format = "image/png",
+              transparent = TRUE
+            ),
+            attribution = "© NVE, Arcgis",
+            group = "flom"  # Group for Layer Control
+          ) %>%
+
+          # # Add a layer control to toggle the WMS layer
+          leaflet::addLayersControl(
+            baseGroups = c("Base Map"),
+            overlayGroups = layer_selected,
+            options = leaflet::layersControlOptions(collapsed = FALSE)
+          ) %>%
+
+          # Add the legend manually
+          leaflet::addControl(html = paste0("<img src='", legend_selected, "' style='width:150px;'>"),
+                     position = "bottomright")
       }
 
-      vectors_selected <- sf::st_transform(vectors_selected, sp::CRS("+proj=longlat +datum=WGS84"))
 
-      leaflet::leafletProxy("map") %>%
-        leaflet::clearShapes()%>%
-        leaflet::addPolygons(data= kom_dat, color = "orange", weight = 3, smoothFactor = 0.5,
-                    opacity = 1.0, fillOpacity = 0)%>%
-        leaflet::addPolygons(data = vectors_selected,
-                    color = "green",  # Customize color if needed
-                    weight = 2,      # Adjust line weight if desired
-                    fillOpacity = 0.5)
     })
 
     # Update image and description based on selected layer
     output$layer_image <- renderImage({
       req(input$layer_select)
       selected_layer <- input$layer_select
-      list(src = layer_images[[selected_layer]], alt = selected_layer)
+      image_path <- system.file("extdata", layer_images[[selected_layer]], package = "eikaCAN")
+
+      list(
+        src = image_path,
+        contentType = "image/jpeg",
+        alt = "Image from extdata"
+      )
+
     }, deleteFile = FALSE)
 
     output$layer_description_short <- renderText({

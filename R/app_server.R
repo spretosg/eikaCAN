@@ -4,6 +4,16 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @noRd
+#' @import dplyr
+#' @import shinyalert
+#' @import shinybusy
+#' @import sf
+#' @import terra
+#' @import shinythemes
+#' @import bslib
+#' @import bsicons
+#' @import leaflet
+#' @import shinydashboard
 app_server <- function(input, output, session) {
   hideTab(inputId = "inTabset",
           target = "p1")
@@ -50,6 +60,7 @@ app_server <- function(input, output, session) {
 
   ## load local data according to selected community
   in_dat<-eventReactive(input$confirm_btn,{
+    shinybusy::show_modal_spinner(text = "hent data", color = main_green)
     # Get the path to the folder
     folder_path <- system.file(paste0("extdata/",input$kommune), package = "eikaCAN")
     #folder_path <- system.file(paste0("extdata/","Verdal"), package = "eikaCAN")
@@ -64,15 +75,23 @@ app_server <- function(input, output, session) {
     gpk_list <- lapply(gpkg_files, sf::st_read)
     raster_list <- lapply(raster_files, terra::rast)
 
-    shinybusy::show_modal_spinner(text = "hent data", color = main_green)
+    #the municpality geometry
     kom_dat<-gpk_list[[2]]
+    #inngrepsfrie natur geometry
     inon<-gpk_list[[1]]
+    #wrodlcover raster
     lulc<-raster_list[[1]]
+    #ku verdi natur geometry
     nat_ku<-gpk_list[[3]]
+    #landscape / ecosystem typers norway
     nin<-gpk_list[[4]]
+    # all the parcels in the muncipality
     parcel<-gpk_list[[5]]
+    #vassdrags natur
     vassdrag<-gpk_list[[6]]
+    #vernområder
     vern<-gpk_list[[7]]
+
     if ("matrikkelnummerTekst" %in% colnames(parcel)) {
       colnames(parcel)[colnames(parcel) == "matrikkelnummerTekst"] <- "matrikkeln"
     }
@@ -101,17 +120,38 @@ app_server <- function(input, output, session) {
   observeEvent(input$confirm_btn,{
     #req(in_dat)
     # show_modal_spinner(text = "hent data", color = main_green)
+
+    showTab(inputId = "inTabset", target = "p1")
+    showTab(inputId = "inTabset", target = "p2")
     updateTabsetPanel(session, "inTabset",
                       selected = "p1")
-    showTab(inputId = "inTabset", target = "p1")
-    #showTab(inputId = "inTabset", target = "p2")
-    #showTab(inputId = "inTabset", target = "p4")
 
+    # adm_name<-as.character(input$kommune)
+    # in_files <- in_dat()
+    # ## valuable nature data module
+    # mod_data_server("data",adm_name, in_files)
+
+    ## screening server module
+    #mod_matrikkel_screen_server("screen_main", in_files)
+  })
+
+  ## if tabset panel changed to p2 call screening module
+  observeEvent(input$inTabset, {
     adm_name<-as.character(input$kommune)
-    files <- in_dat()
-    ## render dashboard like ui
+    in_files <- in_dat()
+    if(input$inTabset == "p1"){
+      updateTabsetPanel(session, "inTabset",
+                        selected = "p1")
 
-    mod_data_server("data",adm_name, files$kom_dat, files$vern, files$bbox, files$nat_ku, files$inon, files$vassdrag, files$nin)
+      ## valuable nature data module
+      mod_data_server("data",adm_name, in_files)
+    }else{
+      updateTabsetPanel(session, "inTabset",
+                        selected = "p2")
+
+      ## valuable nature data module
+      mod_matrikkel_screen_server("screen_main", in_files)
+    }
   })
 
 }
