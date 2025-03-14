@@ -63,7 +63,6 @@ app_server <- function(input, output, session) {
     shinybusy::show_modal_spinner(text = "hent data", color = main_green)
     # Get the path to the folder
     folder_path <- system.file(paste0("extdata/",input$kommune), package = "eikaCAN")
-    #folder_path <- system.file(paste0("extdata/","Verdal"), package = "eikaCAN")
 
     #folder_path<-"inst/extdata/Verdal"
     # List all .gpkg files in the folder
