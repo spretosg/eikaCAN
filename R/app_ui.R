@@ -13,7 +13,7 @@ app_ui <- function(request) {
     # Your application UI logic
     fluidPage(
       theme = shinythemes::shinytheme("flatly"),
-      titlePanel(title = div(img(src="www/eika_logo.PNG", width ='120'), "eika.CAN - naturrisiko"),windowTitle = "eikaCAN"),
+      titlePanel(title = div(img(src="www/eika_logo.PNG", width ='120'), ".CAN - klima & naturrisiko"),windowTitle = "eika.CAN"),
 
       br(),
       tabsetPanel(id = "inTabset",

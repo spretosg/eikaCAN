@@ -22,8 +22,9 @@
 mod_matrikkel_screen_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    sidebarLayout(
-      sidebarPanel(
+    dashboardPage(
+      dashboardHeader(title = ""),
+      dashboardSidebar(
         textInput(ns("eika_id"),"Saks nummer (kreditportalen)"),
         br(),
         selectInput(
@@ -39,8 +40,8 @@ mod_matrikkel_screen_ui <- function(id) {
         uiOutput(ns("cond_btn"))
 
       ),
-      mainPanel(
-        leafletOutput(ns("map_parcel"), height = 600),
+      dashboardBody(
+        #leafletOutput(ns("map_parcel"), height = 600),
         uiOutput(ns("dashboard"))
 
       )
@@ -65,7 +66,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         need(!is.na(input$bruks_nr),''),
         need(!is.na(input$gards_nr),''),
       )
-      actionButton(ns("confirm"),"Søk teig")
+      actionButton(ns("confirm"),"Vuder teig")
     })
 
     #select the parcel based on input data
@@ -77,8 +78,18 @@ mod_matrikkel_screen_server <- function(id, in_files){
     })
 
     #show parcel, ev valuable nature layer and calculate impact!
+    results<-eventReactive(input$confirm,{
+      parcels_sel<-parcels_sel()
+      shinybusy::show_modal_spinner(text = "beregn klima- og naturrisiko", color = main_green)
+      results <- calc_spat_stats(parcels_sel, in_files)
+      remove_modal_spinner()
+      return(results)
+
+    })
     observeEvent(input$confirm,{
       parcels_sel<-parcels_sel()
+      req(results())
+      results<-results()
       #if no parcel is found
       if(nrow(parcels_sel)==0){
         shinyalert(
@@ -99,7 +110,48 @@ mod_matrikkel_screen_server <- function(id, in_files){
         )
 
       }else{
-        bbox <- st_bbox(parcels_sel)
+        ## dashboard and data curation of results
+        output$dashboard<-renderUI(
+          tagList(
+            tabsetPanel(id = "screen_tabs",
+
+                        tabPanel("Naturrisiko", value = "nat",
+                                 fluidRow(column(5,
+                                                 h2("Naturrisiko"),
+                                                 br(),
+                                                 #flag
+                                                 uiOutput(ns("screening_light"))),
+                                          column(3,
+                                                   shinydashboard::valueBoxOutput(ns("vbox1")),
+                                                   shinydashboard::valueBoxOutput(ns("vbox2"))),
+                                          #map
+                                          column(4,
+                                                 leafletOutput(ns("map_parcel")))#close map col
+                                          ),#close row
+                                 actionButton(ns("save"),"Lagre analyse"),
+                                 fluidRow(
+                                   shinydashboard::box(title = "Details", collapsible = TRUE, collapsed = T, width = 12,
+                                                           column(6,
+                                                                  h4("Aktsomhetsarealer"),
+                                                                  DT::DTOutput(ns("nature_layers_out"))),
+                                                       column(6,
+                                                              h4("Påvirket areal"),
+                                                              plotly::plotlyOutput(ns("area_stats")))
+                                                       )#collapsible details
+                                 )
+
+
+                        ),
+                        tabPanel("Klimarisiko", value = "clim",
+                                 h2("Klimarisiko"),
+
+                        )
+                )#close tabset
+
+
+          ))
+
+        ## the map ev, some wms layers?
         output$map_parcel <- renderLeaflet({
           leaflet(parcels_sel) %>%
             addProviderTiles(providers$Esri.WorldImagery,options = tileOptions(minZoom = 8, maxZoom = 15),group = "World image")%>%
@@ -115,49 +167,53 @@ mod_matrikkel_screen_server <- function(id, in_files){
             addLayersControl(baseGroups = c("Kartverket basiskart","World image"),
                              options = layersControlOptions(collapsed = FALSE))
         })
-        shinybusy::show_modal_spinner(text = "hent data", color = main_green)
-        ## calculations:
-        output$dashboard<-renderUI(
-          tagList(
-            br(),
-            #data point E4.SBM-3_03  & E4.SBM-3_04:
-            fluidRow(
-              shinydashboard::valueBoxOutput(ns("vbox1")),
-              shinydashboard::valueBoxOutput(ns("vbox2")),
-            ),
-            br(),
-            uiOutput(ns("screening_light")),
-            br(),
-            h4("Aktsomhetsarealer"),
-            DT::DTOutput(ns("nature_layers_out")),
-            br(),
-            h4("Påvirket areal"),
-            plotly::plotlyOutput(ns("area_stats"))
-
-          ))
 
         # here calculate the stats for the parcel
         #E4-5_10
-        results <- calc_spat_stats(parcels_sel, in_files)
+
         tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
 
         # Extract intersections E4.IRO-1_14
         distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_nat)%>%
-          summarize(min_dist_m = min(closest_distances))%>%
-          mutate(intersections = min_dist_m <= 0)
+          summarize(min_dist_m = min(as.integer(min_dist)),
+                    intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
+
+        ## add skog and myr
+        # myr<-results[[1]]$myr_stats
+        myr <- do.call(rbind, lapply(results, function(x) x$myr_stats))%>%group_by(label,class)%>%summarize(
+          area_m2 = sum(area_m2)
+        )%>%filter(class == 1)
+
+        if(1 %in% myr$class){
+          sub_myr<-myr%>%filter(class == 1)%>%select(area_m2)
+          myr<-c("Myr eller våtmark",0,sub_myr$area_m2,TRUE)
+          distances<-rbind(distances,myr)
+        }
+        skog <- do.call(rbind, lapply(results, function(x) x$skog_stats))%>%group_by(label,class)%>%summarize(
+          area_m2 = sum(area_m2)
+        )%>%filter(!class == 99)
+        if(1 %in% skog$class){
+          sub_skog<-skog%>%filter(class == 1)%>%select(area_m2)
+          skog<-c("Naturskog",0,sub_skog$area_m2,TRUE)
+          distances<-rbind(distances,skog)
+        }
+
         #easy number to check number of intersections
-        n_intersections<-nrow(distances%>%filter(intersections == T))
+        n_intersections<-nrow(distances%>%filter(min_dist_m == "0"))
+
+        #names of val_nat which intersects to be displayed in KPI
+        KPI_nat<-as.vector(unlist(distances%>%filter(min_dist_m == "0")%>%select(valuable_nat)))
 
 
-        # m2 of parcel that is not bebygged E4.SBM-3_05(natural area loss)
+        # m2 of parcel that is not bebygged/aggriculture E4.SBM-3_05(natural area loss)
         nat_loss_m2 <- sum(sapply(results, function(x) x$m2_nat_loss))
 
         # LULC alteration
-        lulc_stats <- do.call(rbind, lapply(results, function(x) x$area_stats))%>%
+        lulc_stats <- do.call(rbind, lapply(results, function(x) x$lulc_stats))%>%
           filter(class>0)%>%group_by(label)%>%
           summarize(area_m2 = sum(area_m2),
                     fraction = sum(area_m2)/tot_proj_area_m2)
-        remove_modal_spinner()
+
 
         ## visualize on dashboard
         #E4.SBM-3_05
@@ -166,7 +222,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           valueBox(
             value = paste0(round(nat_loss_m2,0), " m²"),  # Display the area value
             subtitle = paste0(round(nat_loss_m2/tot_proj_area_m2,0)*100, "% av totalareal er naturareal"),
-            icon = icon("brid"),  # Choose an appropriate FontAwesome icon
+            icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
             color = "olive"
           )
         })
@@ -190,7 +246,8 @@ mod_matrikkel_screen_server <- function(id, in_files){
               value = "",
               h4("Prosjekt-areal ligger utenfor aktsomhetsområdene"),
               br(),
-              actionButton(ns("save"),"Oppdater portefølje"),
+              downloadButton(ns("save"),"Lagre og oppdater portefølje"),
+              # actionButton(ns("save"),"Lagre og oppdater portefølje"),
               theme = value_box_theme(bg = main_green, fg = "black"),
               showcase= bs_icon("check"))
 
@@ -198,9 +255,11 @@ mod_matrikkel_screen_server <- function(id, in_files){
             bslib::value_box(
               title = "",
               value = "",
-              h4("Prosjekt-areal ligger innenfor et aktsomhetsområde"),
+              h4(paste0("Prosjekt-areal ligger innenfor ", paste(KPI_nat, collapse = ", "))),
               br(),
+              h5("Den naturrisikoen er dermed høy"),
               actionButton(ns("questions"),"Vis oppfølgingsspørsmål"),
+              downloadButton(ns("save"),"Lagre og oppdater portefølje"),
               theme = value_box_theme(bg = "red", fg = "black"),
               showcase= bs_icon("exclamation"))
 
@@ -212,7 +271,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         output$nature_layers_out<-DT::renderDT({
           DT::datatable(distances)
         })
-
+        #
         ## report on land cover change
         output$area_stats<-plotly::renderPlotly({
           plotly::plot_ly(
@@ -224,13 +283,56 @@ mod_matrikkel_screen_server <- function(id, in_files){
         })
         # save to duckDB for reporting
 
-
-
-
-
       }
 
     })
+    # final save btn
+    # out_file<-eventReactive(input$save,{
+    #
+    #
+    #
+    # })
+
+    output$save <- downloadHandler(
+      filename = function() { "data_export.csv" },  # File name
+      content = function(file) {
+        results<-results()
+
+        #tot area
+        tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
+
+        # out_file<-data.frame(
+        #   proj_intern_id<-as.character(input$eika_id),
+        #   municipality<-as.character(input$kommune),
+        #   proj_type<-as.character(input$proj_type),
+        #   bruks_nr<-as.integer(input$bruks_nr),
+        #   gards_nummer<-as.integer(input$gards_nr),
+        #   tot_proj_area_m2<-as.integer(0)
+        # )
+        out_file<-data.frame(
+          proj_intern_id<-as.character("AQ"),
+          tot_proj_area_m2<-as.integer(0)
+        )
+        #colnames(out_file)<-c("proj_intern_id","municipality","proj_type","bruks_nr","gards_nummer","tot_proj_area_m2")
+        #write to duckDB
+        db_path <- file.path("inst/extdata", "CAN_DB.duckdb")
+        con <- DBI::dbConnect(duckdb::duckdb(), db_path)  # Connect to the database
+
+        # Check if the table exists
+        table_exists <- duckdb::dbExistsTable(con, "test_1")
+
+        # Append or Create Table
+        if (table_exists) {
+          duckdb::dbAppendTable(con, "test_1", out_file)  # Append new data
+        } else {
+          duckdb::dbWriteTable(con, "test_1", out_file, overwrite = FALSE)  # Create table
+        }
+
+        duckdb::dbDisconnect(con)  # Close connection
+
+        write.csv(out_file, file, row.names = FALSE)  # Save DataFrame as CSV
+      }
+    )
 
 
 

@@ -64,54 +64,76 @@ app_server <- function(input, output, session) {
     # Get the path to the folder
     folder_path <- system.file(paste0("extdata/",input$kommune), package = "eikaCAN")
 
-    #folder_path<-"inst/extdata/Verdal"
-    # List all .gpkg files in the folder
-    gpkg_files <- list.files(folder_path, pattern = "\\.gpkg$", full.names = TRUE)
-    raster_files <- list.files(folder_path, pattern = "\\.tif$", full.names = TRUE)
 
+    ## save reading of files
+    # List of file names to import
+    gpkg_files <- c("friluft_filter_84.gpkg", "kommune_84.gpkg",
+                    "strandsone_84.gpkg","vassdrag_100m_84.gpkg",
+                    "inon_84.gpkg","nat_typer_ku_84.gpkg",
+                    "vern_84.gpkg","red_listed_84.gpkg",
+                    "teig_84.gpkg")
 
-    # Load all files into a list
-    gpk_list <- lapply(gpkg_files, sf::st_read)
-    raster_list <- lapply(raster_files, terra::rast)
+    rast_files <- c("main_ecotypes_25833.tif","myr_25833.tif","natur_skog_25833.tif")
 
-    #the municpality geometry
-    kom_dat<-gpk_list[[2]]
-    #inngrepsfrie natur geometry
-    inon<-gpk_list[[1]]
-    #wrodlcover raster
-    lulc<-raster_list[[1]]
-    #ku verdi natur geometry
-    nat_ku<-gpk_list[[3]]
-    #landscape / ecosystem typers norway
-    nin<-gpk_list[[4]]
-    # all the parcels in the muncipality
-    parcel<-gpk_list[[5]]
-    #vassdrags natur
-    vassdrag<-gpk_list[[6]]
-    #vernområder
-    vern<-gpk_list[[7]]
-
-    if ("matrikkelnummerTekst" %in% colnames(parcel)) {
-      colnames(parcel)[colnames(parcel) == "matrikkelnummerTekst"] <- "matrikkeln"
+    # Function to safely read a file
+    safe_read_gpkg <- function(file_name) {
+      tryCatch(
+        {
+          sf::st_read(paste0(folder_path, "/", file_name))
+        },
+        error = function(e) {
+          message(paste("File not found:", file_name, "- Assigning NULL"))
+          NULL
+        }
+      )
     }
-    parcel <- sf::st_cast(parcel, "MULTIPOLYGON")
-    terra::crs(lulc) <- "EPSG:25833"
-    if (sf::st_crs(kom_dat)$epsg != 4326) {
-      kom_dat <- sf::st_transform(kom_dat, crs = 4326)
+
+    safe_read_tif <- function(file_name) {
+      tryCatch(
+        {
+          rast<-terra::rast(paste0(folder_path, "/", file_name))
+          terra::crs(rast) <- "EPSG:25833"
+          return(rast)
+        },
+        error = function(e) {
+          message(paste("File not found:", file_name, "- Assigning NULL"))
+          NULL
+        }
+      )
+    }
+
+    # Apply the function to all files
+    in_gpkg <- lapply(gpkg_files, safe_read_gpkg)
+    in_rast <- lapply(rast_files, safe_read_tif)
+
+    #change matrikkeln header in parcels
+    if ("matrikkelnummerTekst" %in% colnames(in_gpkg[[9]])) {
+      colnames(in_gpkg[[9]])[colnames(in_gpkg[[9]]) == "matrikkelnummerTekst"] <- "matrikkeln"
+    }
+    #cast parcel to multipolygon
+    in_gpkg[[9]] <- sf::st_cast(in_gpkg[[9]], "MULTIPOLYGON")
+
+    ## change kommune to WGS84
+    if (sf::st_crs(in_gpkg[[2]])$epsg != 4326) {
+      in_gpkg[[2]] <- sf::st_transform(in_gpkg[[2]], crs = 4326)
     }
     # Get bounding box of the commune
-    bbox <- sf::st_bbox(kom_dat)
+    bbox <- sf::st_bbox(in_gpkg[[2]])
     shinybusy::remove_modal_spinner()
     list(
-      kom_dat = kom_dat,
-      vern = vern,
+      kom_dat = in_gpkg[[2]],
+      vern = in_gpkg[[7]],
       bbox = bbox,
-      lulc = lulc,
-      nat_ku = nat_ku,
-      parcel = parcel,
-      inon = inon%>%dplyr::filter(vsone == "1"),
-      nin = nin,
-      vassdrag = vassdrag
+      lulc = in_rast[[1]],
+      nat_ku = in_gpkg[[6]],
+      parcel = in_gpkg[[9]],
+      inon = in_gpkg[[5]]%>%dplyr::filter(vsone == "1"),
+      vassdrag = in_gpkg[[4]],
+      strand = in_gpkg[[3]],
+      myr = in_rast[[2]],
+      red_listed = in_gpkg[[8]],
+      friluft = in_gpkg[[1]],
+      nat_skog = in_rast[[3]]
     )
   })
 
