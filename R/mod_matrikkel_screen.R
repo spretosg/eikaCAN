@@ -66,7 +66,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         need(!is.na(input$bruks_nr),''),
         need(!is.na(input$gards_nr),''),
       )
-      actionButton(ns("confirm"),"Vuder teig")
+      actionButton(ns("confirm"),"beregn klima- og naturrisiko")
     })
 
     #select the parcel based on input data
@@ -79,20 +79,67 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
     #show parcel, ev valuable nature layer and calculate impact!
     results<-eventReactive(input$confirm,{
+      req(parcels_sel())
       parcels_sel<-parcels_sel()
       shinybusy::show_modal_spinner(text = "beregn klima- og naturrisiko", color = main_green)
-      results <- calc_spat_stats(parcels_sel, in_files)
+      if(!is.null(parcels_sel)){
+        results <- calc_spat_stats(parcels_sel, in_files)
+      }
+
       remove_modal_spinner()
       return(results)
 
     })
-    observeEvent(input$confirm,{
-      parcels_sel<-parcels_sel()
+
+    distances<-eventReactive(input$confirm,{
       req(results())
       results<-results()
+      if(nrow(parcels_sel())>0){
+        # Extract intersections E4.IRO-1_14
+        distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_nat)%>%
+          summarize(min_dist_m = min(as.integer(min_dist)),
+                    intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
+
+        distances$valuable_nat<-unlist(distances$valuable_nat)
+        ## add skog and myr
+        # myr<-results[[1]]$myr_stats
+        myr <- as.data.frame(do.call(rbind, lapply(results, function(x) x$myr_stats))%>%group_by(label,class)%>%summarize(
+          area_m2 = sum(area_m2)
+        )%>%filter(class == 1))
+
+        if(1 %in% myr$class){
+          sub_myr<-myr%>%filter(class == 1)%>%select(area_m2)
+          myr<-c("Myr eller våtmark",0,sub_myr$area_m2)
+          distances<-rbind(distances,myr)
+        }
+        skog <- as.data.frame(do.call(rbind, lapply(results, function(x) x$skog_stats))%>%group_by(label,class)%>%summarize(
+          area_m2 = sum(area_m2)
+        )%>%filter(!class == 99))
+        if(1 %in% skog$class){
+          sub_skog<-skog%>%filter(class == 1)%>%select(area_m2)
+          skog<-c("Naturskog",0,sub_skog$area_m2)
+          distances<-rbind(distances,skog)
+        }
+
+        return(distances)
+
+      }
+
+    })
+
+
+
+
+    observeEvent(input$confirm,{
+      req(parcels_sel())
+      req(results())
+      req(distances())
+      distances<-distances()
+      results<-results()
+      parcels_sel<-parcels_sel()
       #if no parcel is found
-      if(nrow(parcels_sel)==0){
-        shinyalert(
+      if(is.null(parcels_sel)){
+        shinyalert::shinyalert(
           title = "",
           #type = "info",
           html = TRUE,
@@ -128,7 +175,6 @@ mod_matrikkel_screen_server <- function(id, in_files){
                                           column(4,
                                                  leafletOutput(ns("map_parcel")))#close map col
                                           ),#close row
-                                 actionButton(ns("save"),"Lagre analyse"),
                                  fluidRow(
                                    shinydashboard::box(title = "Details", collapsible = TRUE, collapsed = T, width = 12,
                                                            column(6,
@@ -173,30 +219,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
         tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
 
-        # Extract intersections E4.IRO-1_14
-        distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_nat)%>%
-          summarize(min_dist_m = min(as.integer(min_dist)),
-                    intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
 
-        ## add skog and myr
-        # myr<-results[[1]]$myr_stats
-        myr <- do.call(rbind, lapply(results, function(x) x$myr_stats))%>%group_by(label,class)%>%summarize(
-          area_m2 = sum(area_m2)
-        )%>%filter(class == 1)
-
-        if(1 %in% myr$class){
-          sub_myr<-myr%>%filter(class == 1)%>%select(area_m2)
-          myr<-c("Myr eller våtmark",0,sub_myr$area_m2,TRUE)
-          distances<-rbind(distances,myr)
-        }
-        skog <- do.call(rbind, lapply(results, function(x) x$skog_stats))%>%group_by(label,class)%>%summarize(
-          area_m2 = sum(area_m2)
-        )%>%filter(!class == 99)
-        if(1 %in% skog$class){
-          sub_skog<-skog%>%filter(class == 1)%>%select(area_m2)
-          skog<-c("Naturskog",0,sub_skog$area_m2,TRUE)
-          distances<-rbind(distances,skog)
-        }
 
         #easy number to check number of intersections
         n_intersections<-nrow(distances%>%filter(min_dist_m == "0"))
@@ -247,7 +270,6 @@ mod_matrikkel_screen_server <- function(id, in_files){
               h4("Prosjekt-areal ligger utenfor aktsomhetsområdene"),
               br(),
               downloadButton(ns("save"),"Lagre og oppdater portefølje"),
-              # actionButton(ns("save"),"Lagre og oppdater portefølje"),
               theme = value_box_theme(bg = main_green, fg = "black"),
               showcase= bs_icon("check"))
 
@@ -259,7 +281,6 @@ mod_matrikkel_screen_server <- function(id, in_files){
               br(),
               h5("Den naturrisikoen er dermed høy"),
               actionButton(ns("questions"),"Vis oppfølgingsspørsmål"),
-              downloadButton(ns("save"),"Lagre og oppdater portefølje"),
               theme = value_box_theme(bg = "red", fg = "black"),
               showcase= bs_icon("exclamation"))
 
@@ -267,6 +288,41 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
         })
 
+        output$cond_btn2<-renderUI({
+          validate(
+            need(input$q1 !='',''),
+            need(input$q1 !='','')     )
+          actionButton(ns("confirm_quest"),"submit and save")
+        })
+
+        observeEvent(input$questions,{
+          shinyalert::shinyalert(
+            title = "oppfølgingsspørsmål",
+            #type = "info",
+            html = TRUE,
+            text = tags$div(
+              br(),
+              textInput(ns("q1"),"First question"),
+              br(),
+              textInput(ns("q2"),"Second question"),
+              br(),
+              uiOutput(ns("cond_btn2"))
+            ),
+            showConfirmButton = FALSE,
+            closeOnEsc = F,
+            closeOnClickOutside = F,
+            showCancelButton = FALSE,
+            animation = "slide-from-bottom",
+            size = "s"
+          )
+
+
+
+
+
+
+        })
+        mod_additional_questions_server("add_quest")
         # report on all layers
         output$nature_layers_out<-DT::renderDT({
           DT::datatable(distances)
@@ -286,51 +342,78 @@ mod_matrikkel_screen_server <- function(id, in_files){
       }
 
     })
-    # final save btn
-    # out_file<-eventReactive(input$save,{
-    #
-    #
-    #
-    # })
+
+    # download xls for project and save on duckDB
 
     output$save <- downloadHandler(
       filename = function() { "data_export.csv" },  # File name
       content = function(file) {
         results<-results()
+        distances<-distances()
+        if(nrow(parcels_sel())>0){
+          #tot area
+          tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
+          print(tot_proj_area_m2)
 
-        #tot area
-        tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
+          #distances & intersections for reporting
+          # Pivot Wider
+          dist_wide <- distances%>%
+            tidyr::pivot_wider(names_from = valuable_nat, values_from = c(min_dist_m, intersect_area_m2), names_sep = "_")
+          # lulc statistics
+          lulc_stats <- do.call(rbind, lapply(results, function(x) x$lulc_stats))%>%
+            filter(class>0)%>%group_by(label)%>%
+            summarize(area_m2 = sum(area_m2),
+                      fraction = sum(area_m2)/tot_proj_area_m2)
 
-        # out_file<-data.frame(
-        #   proj_intern_id<-as.character(input$eika_id),
-        #   municipality<-as.character(input$kommune),
-        #   proj_type<-as.character(input$proj_type),
-        #   bruks_nr<-as.integer(input$bruks_nr),
-        #   gards_nummer<-as.integer(input$gards_nr),
-        #   tot_proj_area_m2<-as.integer(0)
-        # )
-        out_file<-data.frame(
-          proj_intern_id<-as.character("AQ"),
-          tot_proj_area_m2<-as.integer(0)
-        )
-        #colnames(out_file)<-c("proj_intern_id","municipality","proj_type","bruks_nr","gards_nummer","tot_proj_area_m2")
-        #write to duckDB
-        db_path <- file.path("inst/extdata", "CAN_DB.duckdb")
-        con <- DBI::dbConnect(duckdb::duckdb(), db_path)  # Connect to the database
+          lulc_wide <- lulc_stats%>%select(label,area_m2)%>%
+            tidyr::pivot_wider(names_from = label, values_from = area_m2, names_sep = "_")
+          print(lulc_wide)
 
-        # Check if the table exists
-        table_exists <- duckdb::dbExistsTable(con, "test_1")
+          n_intersections<-nrow(distances%>%filter(min_dist_m == "0"))
 
-        # Append or Create Table
-        if (table_exists) {
-          duckdb::dbAppendTable(con, "test_1", out_file)  # Append new data
-        } else {
-          duckdb::dbWriteTable(con, "test_1", out_file, overwrite = FALSE)  # Create table
+
+          # m2 of parcel that is not bebygged/aggriculture E4.SBM-3_05(natural area loss)
+          nat_loss_m2 <- sum(sapply(results, function(x) x$m2_nat_loss))
+
+
+
+          proj_param<-data.frame(
+            proj_intern_id = as.character(input$eika_id),
+            municipality = as.character(input$kommune),
+            proj_type = as.character(input$proj_type),
+            bruks_nr = as.integer(input$bruks_nr),
+            gards_nummer = as.integer(input$gards_nr),
+            tot_proj_area_m2 = as.integer(tot_proj_area_m2),
+            n_intersection_val_nat = as.integer(n_intersections),
+            nat_loss_m2 = as.integer(nat_loss_m2)
+
+          )
+
+
+          out_file<-cbind(proj_param, dist_wide, lulc_wide)
+
+          #colnames(out_file)<-c("proj_intern_id","municipality","proj_type","bruks_nr","gards_nummer","tot_proj_area_m2")
+          #write to duckDB
+          db_path <- file.path("inst/extdata", "CAN_DB.duckdb")
+          con <- DBI::dbConnect(duckdb::duckdb(), db_path)  # Connect to the database
+
+          # Check if the table exists
+          table_exists <- duckdb::dbExistsTable(con, "nature_risk1")
+
+          # Append or Create Table
+          if (table_exists) {
+            duckdb::dbAppendTable(con, "nature_risk1", out_file)  # Append new data
+          } else {
+            duckdb::dbWriteTable(con, "nature_risk1", out_file, overwrite = FALSE)  # Create table
+          }
+
+          duckdb::dbDisconnect(con)  # Close connection
+
+          write.csv(out_file, file, row.names = FALSE)  # Save DataFrame as CSV
+
         }
 
-        duckdb::dbDisconnect(con)  # Close connection
 
-        write.csv(out_file, file, row.names = FALSE)  # Save DataFrame as CSV
       }
     )
 

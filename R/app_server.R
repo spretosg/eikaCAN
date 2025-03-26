@@ -21,14 +21,8 @@ app_server <- function(input, output, session) {
           target = "p2")
   hideTab(inputId = "inTabset",
           target = "p3")
-  hideTab(inputId = "inTabset",
-          target = "p4")
-  hideTab(inputId = "inTabset",
-          target = "p5")
-  hideTab(inputId = "inTabset",
-          target = "p6")
-  hideTab(inputId = "inTabset",
-          target = "p7")
+
+
 
 
 
@@ -144,6 +138,7 @@ app_server <- function(input, output, session) {
 
     showTab(inputId = "inTabset", target = "p1")
     showTab(inputId = "inTabset", target = "p2")
+    showTab(inputId = "inTabset", target = "p3")
     updateTabsetPanel(session, "inTabset",
                       selected = "p1")
 
@@ -166,12 +161,17 @@ app_server <- function(input, output, session) {
 
       ## valuable nature data module
       mod_data_server("data",adm_name, in_files)
-    }else{
+    }else if(input$inTabset == "p2"){
       updateTabsetPanel(session, "inTabset",
                         selected = "p2")
 
       ## valuable nature data module
       mod_matrikkel_screen_server("screen_main", in_files)
+    }else{
+      updateTabsetPanel(session, "inTabset",
+                        selected = "p3")
+      mod_report_server("report")
+
     }
   })
 

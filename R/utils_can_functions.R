@@ -124,7 +124,8 @@ calc_spat_stats <- function(drawn_sf, in_files) {
       label = c("Ikke myr", "Myr eller våtmark","no_data")
     )
 
-    lulc_summary <- merge(lulc_overlay, lulc_classes, by = "class", all.x = TRUE)
+    lulc_summary <- merge(lulc_overlay, lulc_classes, by = "class", all = TRUE)
+    lulc_summary[is.na(lulc_summary)] <- 0
     myr_summary <- merge(myr_overlay, myr_classes, by = "class", all.x = TRUE)
     skog_summary <- merge(forest_overlay, skog_classes, by = "class", all.x = TRUE)
 

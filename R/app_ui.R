@@ -25,23 +25,9 @@ app_ui <- function(request) {
                   tabPanel("Aktsomhetsvurdering", value = "p2",
                            mod_matrikkel_screen_ui("screen_main")
                            ),
-                  #
-                  #
-                  # # tabPanel("Sammenlign prosjekter", value = "p3",
-                  # #          br(),
-                  # #          map_screenUI("compare")),
-                  # # tabPanel("Arealstatistikk", value = "p4",
-                  # #          # uiOutput("bygg_stats")
-                  # # ),
-                  # tabPanel("", value = "p5",
-                  #          # upload_screenUI("upload")
-                  # ),
-                  # tabPanel("", value = "p6",
-                  #          # matrikkel_screenUI("matrikkel")
-                  # ),
-                  # tabPanel("", value = "p7",
-                  #          # map_screenUI("draw")
-                  # )
+                  tabPanel("Rapportering", value = "p3",
+                           br(),
+                           mod_report_ui("report"))
 
       )
     )
