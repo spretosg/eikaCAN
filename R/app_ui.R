@@ -17,8 +17,11 @@ app_ui <- function(request) {
 
       br(),
       tabsetPanel(id = "inTabset",
+                  tabPanel("Klimarisiko", value = "p0",
+                           mod_data_klima_ui("data_klim")
+                  ),
 
-                  tabPanel("Hva er særlig viktig natur?", value = "p1",
+                  tabPanel("Naturriskiko", value = "p1",
                            mod_data_ui("data")
                            ),
 

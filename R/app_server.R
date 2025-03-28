@@ -16,6 +16,8 @@
 #' @import shinydashboard
 app_server <- function(input, output, session) {
   hideTab(inputId = "inTabset",
+          target = "p0")
+  hideTab(inputId = "inTabset",
           target = "p1")
   hideTab(inputId = "inTabset",
           target = "p2")
@@ -61,11 +63,17 @@ app_server <- function(input, output, session) {
 
     ## save reading of files
     # List of file names to import
-    gpkg_files <- c("friluft_filter_84.gpkg", "kommune_84.gpkg",
-                    "strandsone_84.gpkg","vassdrag_100m_84.gpkg",
-                    "inon_84.gpkg","nat_typer_ku_84.gpkg",
-                    "vern_84.gpkg","red_listed_84.gpkg",
-                    "teig_84.gpkg")
+    gpkg_files <- c("friluft_filter_84.gpkg",
+                    "kommune_84.gpkg",
+                    "strandsone_84.gpkg",
+                    "vassdrag_100m_84.gpkg",
+                    "inon_84.gpkg",
+                    "nat_typer_ku_84.gpkg",
+                    "vern_84.gpkg",
+                    "red_listed_84.gpkg",
+                    "teig_84.gpkg",
+                    "kvikkleire_84.gpkg",
+                    "flomsone_200klima_84.gpkg")
 
     rast_files <- c("main_ecotypes_25833.tif","myr_25833.tif","natur_skog_25833.tif")
 
@@ -127,6 +135,8 @@ app_server <- function(input, output, session) {
       myr = in_rast[[2]],
       red_listed = in_gpkg[[8]],
       friluft = in_gpkg[[1]],
+      kvikk = in_gpkg[[10]],
+      flom = in_gpkg[[1]],
       nat_skog = in_rast[[3]]
     )
   })
@@ -135,12 +145,12 @@ app_server <- function(input, output, session) {
   observeEvent(input$confirm_btn,{
     #req(in_dat)
     # show_modal_spinner(text = "hent data", color = main_green)
-
+    showTab(inputId = "inTabset", target = "p0")
     showTab(inputId = "inTabset", target = "p1")
     showTab(inputId = "inTabset", target = "p2")
     showTab(inputId = "inTabset", target = "p3")
     updateTabsetPanel(session, "inTabset",
-                      selected = "p1")
+                      selected = "p0")
 
     # adm_name<-as.character(input$kommune)
     # in_files <- in_dat()
@@ -155,12 +165,20 @@ app_server <- function(input, output, session) {
   observeEvent(input$inTabset, {
     adm_name<-as.character(input$kommune)
     in_files <- in_dat()
-    if(input$inTabset == "p1"){
+    if(input$inTabset == "p0"){
+      updateTabsetPanel(session, "inTabset",
+                        selected = "p0")
+
+      ## valuable nature data module
+      mod_data_klima_server("data_klim",adm_name, in_files)
+
+    }else if(input$inTabset == "p1"){
       updateTabsetPanel(session, "inTabset",
                         selected = "p1")
 
       ## valuable nature data module
       mod_data_server("data",adm_name, in_files)
+
     }else if(input$inTabset == "p2"){
       updateTabsetPanel(session, "inTabset",
                         selected = "p2")

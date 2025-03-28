@@ -42,9 +42,8 @@ mod_data_ui <- function(id) {
                                     "Inngrepsfri natur"="inon",
                                     "Vassdragsnatur"="water"),
           "Andre viktige naturverdier" = c("Utvalgte og truede naturtyper" = "nat_ku",
-                                           "Bymarker, regionale friluftslivområder" = "friluft",
-                                           "Naturskog" = "forest"),
-          "Områder av høy klimarelevans" = c("Flom" = "flood")
+                                           "Friluftslivsområder" = "friluft",
+                                           "Naturskog" = "forest")
         ),
 
         selected = NULL
@@ -89,42 +88,49 @@ mod_data_server <- function(id, adm_unit, in_files){
     ns <- session$ns
 
       output$title<-renderUI({
-      h2(paste0("Naturverdier og klima aspekter i ", as.character(adm_unit)," kommune"))
+      h2(paste0("Naturverdier i ", as.character(adm_unit)," kommune"))
     })
 
-    # vectors <- list(
-    #   "nat_vern" = vern,
-    #   "nat_ku" = nat_ku,
-    #   "inon" = inon,
-    #   "water" = vassdrag
-    # )
+
       kom_dat<-in_files$kom_dat
       bbox<-in_files$bbox
 
     wms_url <- list(
-      "flood" = "https://nve.geodataonline.no:443/arcgis/services/FlomAktsomhet/MapServer/WmsServer",
       "inon" = "https://kart.miljodirektoratet.no/geoserver/inngrepsfrinatur/wms",
-      # "forest" = "https://image001.miljodirektoratet.no:443/arcgis/services/naturskog/naturskog_v1/mapserver/WMSServer",
+      "press_strand"="https://wms.geonorge.no/skwms1/wms.spr_strandsoner?service=wms&request=getcapabilities",
       "nat_vern"= "https://kart.miljodirektoratet.no/arcgis/services/vern/mapserver/WMSServer",
       "rein" = "https://kart.miljodirektoratet.no/arcgis/services/villrein/mapserver/WMSServer",
-      "nat_ku" = "https://kart.miljodirektoratet.no/arcgis/services/naturtyper_kuverdi/mapserver/WMSServer"
+      "nat_ku" = "https://kart.miljodirektoratet.no/arcgis/services/naturtyper_kuverdi/mapserver/WMSServer",
+      "friluft" = "https://kart.miljodirektoratet.no/arcgis/services/friluftsliv_kartlagt/mapserver/WMSServer",
+      "forest" = "https://image001.miljodirektoratet.no:443/arcgis/services/naturskog/naturskog_v1/MapServer/WMSServer"
     )
 
     legend_url <- list(
-      "flood" = "https://nve.geodataonline.no:443/arcgis/services/FlomAktsomhet/MapServer/WmsServer?request=GetLegendGraphic%26version=1.3.0%26format=image/png%26layer=MaksimalVannstandstigning",
       "inon" = "https://kart.miljodirektoratet.no/geoserver/inngrepsfrinatur/wms?request=GetLegendGraphic&version=1.1.1&format=image%2Fpng&width=20&height=20&layer=status",
-      # "forest" = ""
+      "press_strand"="https://wms.geonorge.no/skwms1/wms.spr_strandsoner?version=1.3.0&service=WMS&request=GetLegendGraphic&sld_version=1.1.0&layer=spr_strandsoner&format=image/png&STYLE=default",
       "nat_vern" = "https://kart.miljodirektoratet.no/arcgis/services/vern/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=naturvern_klasser_omrade",
       "rein" = "https://kart.miljodirektoratet.no/arcgis/services/villrein/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=villrein_leveomrade",
-      "nat_ku" = "https://kart.miljodirektoratet.no/arcgis/services/naturtyper_kuverdi/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=kuverdi_naturtype_alle"
+      "nat_ku" = "https://kart.miljodirektoratet.no/arcgis/services/naturtyper_kuverdi/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=kuverdi_naturtype_alle",
+      "friluft"="https://kart.miljodirektoratet.no/arcgis/services/friluftsliv_kartlagt/MapServer/WmsServer?request=GetLegendGraphic%26version=1.3.0%26format=image/png%26layer=friluftsliv_kartlagt_verdi",
+      "forest" = "https://image001.miljodirektoratet.no:443/arcgis/services/naturskog/naturskog_v1/MapServer/WMSServer?request=GetLegendGraphic%26version=1.3.0%26format=image/png%26layer=skog_etablert_foer_1940_ikke_flatehogd"
     )
     layer <-list(
-      "flood" = "Flom_aktsomhetsomrade",
-      "inon" = "Status inngr.fri natur 2023",
+      "inon" = "status",
+      "press_strand" = "spr_strandsoner",
       "nat_vern" = "naturvern_klasser_omrade",
       "rein" = "villrein_leveomrade",
-      "nat_ku" = "kuverdi_naturtype_alle"
-
+      "nat_ku" = "kuverdi_naturtype_alle",
+      "friluft" = "friluftsliv_kartlagt_verdi",
+      "forest" = "skog_etablert_foer_1940_ikke_flatehogd"
+    )
+    attr_list <-list(
+      "inon" = "@Milj.dir. Geoserver",
+      "press_strand" = "@Geonorge",
+      "nat_vern"= "@Milj.dir. Arcgis",
+      "rein"= "@Milj.dir. Arcgis",
+      "nat_ku" = "@Milj.dir. Arcgis",
+      "friluft" = "@Milj.dir. Arcgis",
+      "forest" = "@Milj.dir. Arcgis"
     )
 
     # Placeholder for layer descriptions
@@ -137,8 +143,7 @@ mod_data_server <- function(id, adm_unit, in_files){
       "rein" = "Kort beskrivelse for villreinområder data layer.",
       "water" = "Kort beskrivelse for vassdragsnatur data layer.",
       "friluft" = "Kort beskrivelse for verdsatte friluftsliv områder data layer.",
-      "forest" = "Kort beskrivelse for vernskog data layer.",
-      "flood" = "Kort beskrivelse for flom sone data layer."
+      "forest" = "Kort beskrivelse for vernskog data layer."
     )
 
     layer_description_long <- list(
@@ -150,8 +155,7 @@ mod_data_server <- function(id, adm_unit, in_files){
       "rein" = "Long beskrivelse for villreinområder data layer.",
       "water" = "Long beskrivelse for vassdragsnatur data layer.",
       "friluft" = "Long beskrivelse for verdsatte friluftsliv områder data layer.",
-      "forest" = "Long beskrivelse for vernskog data layer.",
-      "flood" = "Long beskrivelse for flom sone data layer."
+      "forest" = "Long beskrivelse for vernskog data layer."
     )
 
     layer_description_easy <- list(
@@ -163,8 +167,7 @@ mod_data_server <- function(id, adm_unit, in_files){
       "rein" = "Easy beskrivelse for villreinområder data layer.",
       "water" = "Easy beskrivelse for vassdragsnatur data layer.",
       "friluft" = "Easy beskrivelse for verdsatte friluftsliv områder data layer.",
-      "forest" = "Easy beskrivelse for vernskog data layer.",
-      "flood" = "Easy beskrivelse for flom sone data layer."
+      "forest" = "Easy beskrivelse for vernskog data layer."
       )
 
 
@@ -179,8 +182,7 @@ mod_data_server <- function(id, adm_unit, in_files){
       "press_strand" = "layer_pictures/press_strand.jpg",
       "water" = "layer_pictures/vassdrag.jpg",
       "forest" = "layer_pictures/vernskog.jpg",
-      "rein" = "layer_pictures/villrein.jpg",
-      "flood" = "layer_pictures/flood.jpg"
+      "rein" = "layer_pictures/villrein.jpg"
     )
 
     # Render Leaflet map
@@ -197,43 +199,68 @@ mod_data_server <- function(id, adm_unit, in_files){
       req(input$layer_select)
       selected_layer <- input$layer_select
 
-      wms_selected <- wms_url[[selected_layer]]
-      legend_selected <-legend_url[[selected_layer]]
-      layer_selected <-layer[[selected_layer]]
-
-      if(is.null(wms_selected) | is.null(legend_selected)){
-        #empty leaflet proxy map
-        leaflet::leafletProxy("data_map")%>%
-          leaflet::clearTiles()%>%
-          leaflet::clearControls()%>%
-          leaflet::addTiles()
-      }else{
+      if(selected_layer == "water"){
         leaflet::leafletProxy("data_map") %>%
           leaflet::clearTiles()%>%
           leaflet::clearControls()%>%
-          leaflet::addTiles() %>%
-          leaflet::addWMSTiles(
-            baseUrl = wms_selected,
-            layers = layer_selected,
-            options = leaflet::WMSTileOptions(
-              format = "image/png",
-              transparent = TRUE
-            ),
-            attribution = "© NVE, Arcgis",
-            group = "flom"  # Group for Layer Control
-          ) %>%
+          addWMSTiles(
+            baseUrl = "https://wms.geonorge.no/skwms1/wms.norges_grunnkart?service=wms&request=getcapabilities",
+            layers = "norges_grunnkart",
+            options = WMSTileOptions(format = "image/png", transparent = TRUE),
+            attribution = "© Kartverket",
+            group = "Kartverket basiskart"
+          )%>%
+          leaflet::addTiles(
+            urlTemplate = "https://maps-test.nina.no/titiler/cog/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?colormap_name=blues&rescale=0%2C1&bidx=1&url=https%3A%2F%2Fmaps-test.nina.no%2Fmedia%2Fmaps%2Fsources%2F37%2Fvassdrag_100m.tif.cog",
+            options = tileOptions(tms = FALSE)  # Keep tms=FALSE for Web Mercator Quad tiles
+          )
 
-          # # Add a layer control to toggle the WMS layer
-          leaflet::addLayersControl(
-            baseGroups = c("Base Map"),
-            overlayGroups = layer_selected,
-            options = leaflet::layersControlOptions(collapsed = FALSE)
-          ) %>%
 
-          # Add the legend manually
-          leaflet::addControl(html = paste0("<img src='", legend_selected, "' style='width:150px;'>"),
-                     position = "bottomright")
+      }else{
+
+        wms_selected <- wms_url[[selected_layer]]
+        legend_selected <-legend_url[[selected_layer]]
+        layer_selected <-layer[[selected_layer]]
+        attribution <- attr_list[[selected_layer]]
+
+        if(is.null(wms_selected) | is.null(legend_selected)){
+          #empty leaflet proxy map
+          leaflet::leafletProxy("data_map")%>%
+            leaflet::clearTiles()%>%
+            leaflet::clearControls()%>%
+            leaflet::addTiles()%>%
+            leaflet::setView(lng =mean(bbox$xmin,bbox$xmax) , lat = mean(bbox$ymin,bbox$ymax), zoom = 10)
+        }else{
+          leaflet::leafletProxy("data_map") %>%
+            leaflet::clearTiles()%>%
+            leaflet::clearControls()%>%
+            leaflet::addTiles() %>%
+            leaflet::addWMSTiles(
+              baseUrl = wms_selected,
+              layers = layer_selected,
+              options = leaflet::WMSTileOptions(
+                format = "image/png",
+                transparent = TRUE
+              ),
+              attribution = attribution,
+              group = legend_selected
+            ) %>%
+
+            # # Add a layer control to toggle the WMS layer
+            leaflet::addLayersControl(
+              baseGroups = c("Base Map"),
+              overlayGroups = layer_selected,
+              options = leaflet::layersControlOptions(collapsed = FALSE)
+            ) %>%
+
+            # Add the legend manually
+            leaflet::addControl(html = paste0("<img src='", legend_selected, "' style='width:250px;'>"),
+                                position = "bottomright")
+        }
+
       }
+
+
 
 
     })

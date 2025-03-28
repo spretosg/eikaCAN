@@ -76,8 +76,8 @@ calc_spat_stats <- function(drawn_sf, in_files) {
   in_files <- lapply(in_files, transform_sf_objects, crs_target = new_crs)
 
   # a subset list of just the objects to calculate distance from parcel
-  vern_list<-list(in_files$vern,in_files$nat_ku,in_files$inon,in_files$vassdrag,in_files$strand,in_files$red_listed,in_files$friluft)
-  vern_vector<-c("Vernområder","Natur av forvaltningsintersse","Inngrepsfrie natur","Vassdragsnatur","Strandsone","Rød lista arter", "Friluftslivsområder")
+  vern_list<-list(in_files$vern,in_files$nat_ku,in_files$inon,in_files$vassdrag,in_files$strand,in_files$red_listed,in_files$friluft,in_files$flom, in_files$kvikk)
+  vern_vector<-c("Vernområder","Natur av forvaltningsintersse","Inngrepsfrie natur","Vassdragsnatur","Strandsone","Rød lista arter", "Friluftslivsområder","Flomsoner 200år klima","Kvikkleire risikoområde")
 
   # Initialize an empty list to store results for each polygon
   results_list <- list()
@@ -92,13 +92,15 @@ calc_spat_stats <- function(drawn_sf, in_files) {
     # Apply function
     spat_stats <- calc_min_distance(single_polygon, vern_list)
 
-    # Extract closest distance E4-5_01
+    # Extract closest distance E4-5_01 & KLIMA E1
     df<-cbind(sapply(spat_stats, function(x) x$distance),
     sapply(spat_stats, function(x) x$intersection),
     sapply(spat_stats, function(x) x$intersection_area),vern_vector)
 
     df<-as.data.frame(df)
-    colnames(df)<-c("min_dist","intersect","intersection_area","valuable_nat")
+    colnames(df)<-c("min_dist","intersect","intersection_area","valuable_areas")
+
+
 
 
     ################## extract overlay with lulc
@@ -152,77 +154,6 @@ calc_spat_stats <- function(drawn_sf, in_files) {
   return(results_list)
 }
 
-# calc_spat_stats_single <- function(drawn_sf, vern, lulc) {
-#   print("start function ---------")
-#   # Transform all geometries to the same CRS (EPSG:25833 - UTM Zone 33N)
-#   drawn_sf <- st_transform(drawn_sf, 25833)
-#   vern <- st_transform(vern, 25833)
-#
-#
-#   # Initialize an empty list to store results for each polygon
-#   results_list <- list()
-#
-#   # Project area m2
-#   proj_area<-st_area(drawn_sf)
-#
-#   # intersection with vern (change after to valuable nature)
-#   intersect_nature = nrow(st_intersection(drawn_sf, vern))
-#   print(intersect_nature)
-#
-#   # Shortest distance calculation
-#   shortest_distance <- min(st_distance(drawn_sf, vern))
-#
-#   # Overlap statistics using exactextractr
-#   overlap_stats <- exact_extract(lulc, drawn_sf)
-#
-#   # Combine results into a single data frame
-#   overlap_results <- do.call(rbind, overlap_stats)
-#   #print(overlap_results)
-#
-#   # Filter out NA values
-#   overlap_results <- overlap_results[!is.na(overlap_results$value), ]
-#
-#   # Group by class and calculate total area
-#   summary <- aggregate(overlap_results$coverage_fraction,
-#                        by = list(class = overlap_results$value),
-#                        FUN = sum)
-#   colnames(summary) <- c("class", "area_fraction")
-#
-#   # Calculate actual area in square meters
-#   pixel_area <- res(lulc)[1] * res(lulc)[2]
-#   summary$area_m2 <- summary$area_fraction * pixel_area
-#   print(summary)
-#
-#   # Join with ESA WorldCover classes
-#   esa_classes <- data.frame(
-#     class = c(10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100),
-#     label = c("Skog", "Busker", "Jordbruk", "Jordbruk", "Bebygd",
-#               "Åpen fastmark", "Snø & Is", "Ferskvann",
-#               "Myr", "Myr", "Moss and lichen")
-#   )
-#   summary <- merge(summary, esa_classes, by = "class", all.x = TRUE)
-#   excluded_classes <- c("Jordbruk", "Bebygd")
-#   sum_natureloss <- summary %>%
-#     filter(!label %in% excluded_classes) %>%
-#     summarise(sum_A = sum(area_m2)) %>%
-#     pull(sum_A)
-#
-#   # Add results for this polygon to the list
-#   results_list <- list(
-#     polygon_id = as.numeric(1),
-#     project_area_m2 = as.numeric(proj_area),
-#     min_dist_vern = as.numeric(shortest_distance),
-#     m2_nat_loss = sum_natureloss,
-#     int_vern = as.integer(intersect_nature),
-#     area_stats = summary
-#   )
-#   print("---- end fkt----")
-#
-#   return(results_list)
-# }
+calc_spat_klim_stats <-function(draw_sf,in_files){
 
-write_stats_to_DB <- function(stats){
-  #gather the different data points
-
-  #write to parquet file
 }

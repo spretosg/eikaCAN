@@ -96,11 +96,11 @@ mod_matrikkel_screen_server <- function(id, in_files){
       results<-results()
       if(nrow(parcels_sel())>0){
         # Extract intersections E4.IRO-1_14
-        distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_nat)%>%
+        distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_areas)%>%
           summarize(min_dist_m = min(as.integer(min_dist)),
                     intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
 
-        distances$valuable_nat<-unlist(distances$valuable_nat)
+        distances$valuable_areas<-unlist(distances$valuable_areas)
         ## add skog and myr
         # myr<-results[[1]]$myr_stats
         myr <- as.data.frame(do.call(rbind, lapply(results, function(x) x$myr_stats))%>%group_by(label,class)%>%summarize(
@@ -135,6 +135,9 @@ mod_matrikkel_screen_server <- function(id, in_files){
       req(results())
       req(distances())
       distances<-distances()
+      distances$min_dist_m<-as.integer(distances$min_dist_m)
+      distances$intersect_area_m2<-as.integer(distances$intersect_area_m2)
+      print(distances)
       results<-results()
       parcels_sel<-parcels_sel()
       #if no parcel is found
@@ -160,39 +163,45 @@ mod_matrikkel_screen_server <- function(id, in_files){
         ## dashboard and data curation of results
         output$dashboard<-renderUI(
           tagList(
-            tabsetPanel(id = "screen_tabs",
+              # main KPI of both
+              fluidRow(column(5,
+                              h2("Klima og naturrisiko"),
+                              br(),
+                              #flag
+                              uiOutput(ns("screening_light")),
+                              uiOutput(ns("screening_light_klim"))),
 
-                        tabPanel("Naturrisiko", value = "nat",
-                                 fluidRow(column(5,
-                                                 h2("Naturrisiko"),
-                                                 br(),
-                                                 #flag
-                                                 uiOutput(ns("screening_light"))),
-                                          column(3,
-                                                   shinydashboard::valueBoxOutput(ns("vbox1")),
-                                                   shinydashboard::valueBoxOutput(ns("vbox2"))),
-                                          #map
-                                          column(4,
-                                                 leafletOutput(ns("map_parcel")))#close map col
-                                          ),#close row
-                                 fluidRow(
-                                   shinydashboard::box(title = "Details", collapsible = TRUE, collapsed = T, width = 12,
-                                                           column(6,
-                                                                  h4("Aktsomhetsarealer"),
-                                                                  DT::DTOutput(ns("nature_layers_out"))),
-                                                       column(6,
-                                                              h4("Påvirket areal"),
-                                                              plotly::plotlyOutput(ns("area_stats")))
-                                                       )#collapsible details
-                                 )
+                       column(3,
+                              shinydashboard::valueBoxOutput(ns("vbox1")),
+                              shinydashboard::valueBoxOutput(ns("vbox2")),
+                              shinydashboard::valueBoxOutput(ns("vbox3"))),
+                       #map
+                       column(4,
+                              leafletOutput(ns("map_parcel")))#close map col
+              ),#close row
+              fluidRow(
+                shinydashboard::box(title = "Details klimarisiko", collapsible = TRUE, collapsed = T, width = 12,
+                                    column(12,
+                                           h4("Aktsomhetsarealer klima"),
+                                           DT::DTOutput(ns("klima_layers_out"))),
+                                    # column(6,
+                                    #        h4("Påvirket areal"),
+                                    #        plotly::plotlyOutput(ns("area_stats")))
+                )#collapsible details nature
+              ),
+
+              fluidRow(
+                shinydashboard::box(title = "Details naturrisiko", collapsible = TRUE, collapsed = T, width = 12,
+                                    column(6,
+                                           h4("Aktsomhetsarealer natur"),
+                                           DT::DTOutput(ns("nature_layers_out"))),
+                                    column(6,
+                                           h4("Påvirket areal"),
+                                           plotly::plotlyOutput(ns("area_stats")))
+                )#collapsible details nature
+              ),
 
 
-                        ),
-                        tabPanel("Klimarisiko", value = "clim",
-                                 h2("Klimarisiko"),
-
-                        )
-                )#close tabset
 
 
           ))
@@ -219,17 +228,27 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
         tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
 
+        ## climate vector for filtering nature and climate distances
+        klim_vec<-c("Flomsoner 200år klima","Kvikkleire risikoområde")
 
+        #easy number to check number of intersections nature
+        n_inter_nat<-nrow(distances%>%filter(min_dist_m == 0 & !valuable_areas %in% klim_vec))
 
-        #easy number to check number of intersections
-        n_intersections<-nrow(distances%>%filter(min_dist_m == "0"))
+        #and climate
+        n_inter_klim<-nrow(distances%>%filter(min_dist_m == 0 & valuable_areas %in% klim_vec))
 
         #names of val_nat which intersects to be displayed in KPI
-        KPI_nat<-as.vector(unlist(distances%>%filter(min_dist_m == "0")%>%select(valuable_nat)))
-
+        KPI_nat<-as.vector(unlist(distances%>%filter(min_dist_m == 0 & !valuable_areas %in% klim_vec)%>%select(valuable_areas)))
+        KPI_klim<-as.vector(unlist(distances%>%filter(min_dist_m == 0 & valuable_areas %in% klim_vec)%>%select(valuable_areas)))
+        print(KPI_klim)
 
         # m2 of parcel that is not bebygged/aggriculture E4.SBM-3_05(natural area loss)
         nat_loss_m2 <- sum(sapply(results, function(x) x$m2_nat_loss))
+
+        #m2 of parcel that is lost for climate important areas E1...
+        klim_loss_m2<-unlist(distances%>%filter(as.integer(min_dist_m) == 0 & valuable_areas %in% klim_vec)%>%select(intersect_area_m2))
+        klim_loss_m2<-sum(as.integer(klim_loss_m2))
+
 
         # LULC alteration
         lulc_stats <- do.call(rbind, lapply(results, function(x) x$lulc_stats))%>%
@@ -249,6 +268,18 @@ mod_matrikkel_screen_server <- function(id, in_files){
             color = "olive"
           )
         })
+
+        ## klimate relevant affected area
+        output$vbox3 <- shinydashboard::renderValueBox({
+
+          valueBox(
+            value = paste0(round(klim_loss_m2,0), " m²"),  # Display the area value
+            subtitle = paste0(round(klim_loss_m2/tot_proj_area_m2,0)*100, "% av totalareal er klima relevant areal"),
+            icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
+            color = "light-blue"
+          )
+        })
+
         #E4-5_10
         output$vbox1 <- shinydashboard::renderValueBox({
 
@@ -263,7 +294,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         ## screening light:
         output$screening_light<-renderUI({
 
-          if(n_intersections==0){
+          if(n_inter_nat==0){
             bslib::value_box(
               title = "",
               value = "",
@@ -280,6 +311,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
               h4(paste0("Prosjekt-areal ligger innenfor ", paste(KPI_nat, collapse = ", "))),
               br(),
               h5("Den naturrisikoen er dermed høy"),
+              downloadButton(ns("save"),"Lagre og oppdater portefølje"),
               actionButton(ns("questions"),"Vis oppfølgingsspørsmål"),
               theme = value_box_theme(bg = "red", fg = "black"),
               showcase= bs_icon("exclamation"))
@@ -358,7 +390,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           #distances & intersections for reporting
           # Pivot Wider
           dist_wide <- distances%>%
-            tidyr::pivot_wider(names_from = valuable_nat, values_from = c(min_dist_m, intersect_area_m2), names_sep = "_")
+            tidyr::pivot_wider(names_from = valuable_areas, values_from = c(min_dist_m, intersect_area_m2), names_sep = "_")
           # lulc statistics
           lulc_stats <- do.call(rbind, lapply(results, function(x) x$lulc_stats))%>%
             filter(class>0)%>%group_by(label)%>%
@@ -369,7 +401,12 @@ mod_matrikkel_screen_server <- function(id, in_files){
             tidyr::pivot_wider(names_from = label, values_from = area_m2, names_sep = "_")
           print(lulc_wide)
 
-          n_intersections<-nrow(distances%>%filter(min_dist_m == "0"))
+          #easy number to check number of intersections nature
+          n_inter_nat<-nrow(distances%>%filter(min_dist_m == "0" & !valuable_areas %in% klim_vec))
+
+          #and climate
+          n_inter_klim<-nrow(distances%>%filter(min_dist_m == "0" & valuable_areas %in% klim_vec))
+
 
 
           # m2 of parcel that is not bebygged/aggriculture E4.SBM-3_05(natural area loss)
@@ -384,7 +421,8 @@ mod_matrikkel_screen_server <- function(id, in_files){
             bruks_nr = as.integer(input$bruks_nr),
             gards_nummer = as.integer(input$gards_nr),
             tot_proj_area_m2 = as.integer(tot_proj_area_m2),
-            n_intersection_val_nat = as.integer(n_intersections),
+            n_intersection_val_nat = as.integer(n_inter_nat),
+            n_intersection_val_klim = as.integer(n_inter_klim),
             nat_loss_m2 = as.integer(nat_loss_m2)
 
           )
