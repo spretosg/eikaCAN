@@ -240,7 +240,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         #names of val_nat which intersects to be displayed in KPI
         KPI_nat<-as.vector(unlist(distances%>%filter(min_dist_m == 0 & !valuable_areas %in% klim_vec)%>%select(valuable_areas)))
         KPI_klim<-as.vector(unlist(distances%>%filter(min_dist_m == 0 & valuable_areas %in% klim_vec)%>%select(valuable_areas)))
-        print(KPI_klim)
+        # print(KPI_klim)
 
         # m2 of parcel that is not bebygged/aggriculture E4.SBM-3_05(natural area loss)
         nat_loss_m2 <- sum(sapply(results, function(x) x$m2_nat_loss))
