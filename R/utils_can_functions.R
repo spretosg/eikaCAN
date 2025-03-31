@@ -11,20 +11,32 @@
 # Function to calculate intersection and distance between shapes
 calc_min_distance <- function(geom, layers) {
   results <- lapply(layers, function(layer) {
-    distance <- st_distance(geom, layer) %>% min()  # Closest distance
-    if(as.numeric(distance) == 0){
-      # Compute intersection AREA
-      intersection <- TRUE
-      intersection_area <- st_area(st_intersection(geom, layer))
+    if(!is.null(layer)){
+      distance <- st_distance(geom, layer) %>% min()  # Closest distance
+      if(as.numeric(distance) == 0){
+        # Compute intersection AREA
+        intersection <- TRUE
+        intersect_poly<-st_intersection(geom, layer)
+        intersection_area <- st_area(intersect_poly)
+        intersect_poly<-st_geometry(st_intersection(geom, layer))
 
+      }else{
+        intersection <- FALSE
+        intersect_poly<- NULL
+        intersection_area <- NA
+      }
+
+      list(distance = as.integer(distance),
+           intersection = intersection,
+           inter_poly = intersect_poly,
+           intersection_area = as.integer(intersection_area))
     }else{
-      intersection <- FALSE
-      intersection_area <- NA
+      list(distance = NA,
+           intersection = NA,
+           inter_poly = NA,
+           intersection_area = NA)
     }
 
-    list(distance = as.integer(distance),
-         intersection = intersection,
-         intersection_area = as.integer(intersection_area))
   })
   return(results)
 }
@@ -91,17 +103,21 @@ calc_spat_stats <- function(drawn_sf, in_files) {
 
     # Apply function
     spat_stats <- calc_min_distance(single_polygon, vern_list)
+    print(spat_stats)
 
     # Extract closest distance E4-5_01 & KLIMA E1
-    df<-cbind(sapply(spat_stats, function(x) x$distance),
+    df<-cbind(vern_vector,
+              #dist
+    sapply(spat_stats, function(x) x$distance),
+    #boolean intersection
     sapply(spat_stats, function(x) x$intersection),
-    sapply(spat_stats, function(x) x$intersection_area),vern_vector)
+    #if intersection intersection poly
+    sapply(spat_stats, function(x) x$inter_poly),
+    #and ev. area of intersection
+    sapply(spat_stats, function(x) x$intersection_area))
 
     df<-as.data.frame(df)
-    colnames(df)<-c("min_dist","intersect","intersection_area","valuable_areas")
-
-
-
+    colnames(df)<-c("valuable_areas","min_dist","intersect","geometry","intersection_area")
 
     ################## extract overlay with lulc
     lulc_overlay <- calc_overlay(single_polygon,in_files$lulc,sum)
@@ -154,6 +170,4 @@ calc_spat_stats <- function(drawn_sf, in_files) {
   return(results_list)
 }
 
-calc_spat_klim_stats <-function(draw_sf,in_files){
 
-}

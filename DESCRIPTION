@@ -1,9 +1,9 @@
 Package: eikaCAN
-Title: An Amazing Shiny App
+Title: PKG_TITLE
 Version: 0.0.0.9000
 Authors@R: 
-    person("firstname", "lastname", , "your@email.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Reto", "Spielhofer", , "reto.spielhofer@nina.no", role = c("aut", "cre"))
+Description: PKG_DESC.
 License: What license is it under?
 URL: https://github.com/spretosg/eikaCAN
 BugReports: https://github.com/spretosg/eikaCAN/issues
@@ -12,6 +12,7 @@ Imports:
     bslib,
     config,
     dplyr,
+    DT,
     golem,
     leaflet,
     shiny,

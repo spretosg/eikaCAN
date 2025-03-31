@@ -32,7 +32,8 @@ app_ui <- function(request) {
                            br(),
                            mod_report_ui("report"))
 
-      )
+      ),
+      uiOutput("shortcut")
     )
   )
 }

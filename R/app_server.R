@@ -9,57 +9,92 @@
 #' @import shinybusy
 #' @import sf
 #' @import terra
-#' @import shinythemes
 #' @import bslib
 #' @import bsicons
 #' @import leaflet
 #' @import shinydashboard
+#' @import shinyBS
 app_server <- function(input, output, session) {
-  hideTab(inputId = "inTabset",
-          target = "p0")
-  hideTab(inputId = "inTabset",
-          target = "p1")
-  hideTab(inputId = "inTabset",
-          target = "p2")
-  hideTab(inputId = "inTabset",
-          target = "p3")
+  hideTab(inputId = "inTabset", target = "p0")
+  hideTab(inputId = "inTabset", target = "p1")
+  hideTab(inputId = "inTabset", target = "p2")
+  hideTab(inputId = "inTabset", target = "p3")
 
-
-
-
-
-  shinyalert::shinyalert(
+  showModal(modalDialog(
     title = "Velkommen til prototypen av eika.CAN verktøy",
-    #type = "info",
-    html = TRUE,
-    text = tags$div(
+    easyClose = FALSE,  # Prevent closing on click outside
+    footer = NULL,  # Remove default footer buttons
+    size = "m",
+    tags$div(
       tags$img(src="www/eika_logo.PNG", width = "100%", height = "auto"),
       h4("eika.CAN er et verktøy for aktsomhetsvurdering av vesentlig klima & naturrisiko i virksomheten"),
       br(),
       h5("Prototypen er en showcase og inneholder foreløpig ingen konkrete analyser av naturinngrep. Data og analyser vil bli definert og implementert i løpet av 2025-prosjektet."),
       br(),
       h4(HTML("<b>Velg kommune prosjektet befinner seg i</b>")),
-      selectInput("kommune", "",
-                  choices = c("Lillestrøm", "Verdal", "Åfjord", "Grong")),
-      actionButton("confirm_btn","Bekreft"),
-    ),
-    showConfirmButton = FALSE,
-    closeOnEsc = F,
-    closeOnClickOutside = F,
-    showCancelButton = FALSE,
-    animation = "slide-from-bottom",
-    size = "s"
-  )
+
+      selectInput("kommune", "", choices = c("Lillestrøm", "Verdal", "Åfjord", "Grong")),
+      actionButton("confirm_btn", "Bekreft og gå videre", class = "btn-primary"),
+
+      br(), br(),
+
+      h4("Eller godkjenn prosjektet direkte"),
+      actionButton("confirm_dir", "Godkjenn"),
 
 
+      h5("Bare godkjenn prosjektet hvis det er sikkert at klima og naturrisiko er ikke relevant",     tags$span(
+        icon("info-circle", lib = "font-awesome"),
+        id = "info_icon",
+        style = "cursor: pointer; color: blue;"
+      ))
+      # Info icon with tooltip using shinyBS
 
+    )
+  ))
+
+  observeEvent(input$confirm_dir,{
+    removeModal()
+    output$shortcut<-renderUI(
+      tagList(
+        textInput("eika_id","Saks nummer (kreditportalen)"),
+        br(),
+        selectInput("kommune2", "", choices = c("Lillestrøm", "Verdal", "Åfjord", "Grong")),
+        selectInput(
+          "proj_type",
+          "Velg prosjekttype",
+          choices = c("", "Bolig" = "house", "Næring" = "industry","Landbruk"="agri"),
+          selected = ""
+        ),
+        numericInput("bruks_nr","Bruksnummer",NA),
+        br(),
+        numericInput("gards_nr","Gårdsnummer",NA),
+        br(),
+        uiOutput("cond_btn")
+      )
+    )
+
+  })
+
+  output$cond_btn<-renderUI({
+    validate(
+      need(input$proj_type !='',''),
+      need(!is.na(input$bruks_nr),''),
+      need(!is.na(input$gards_nr),''),
+    )
+
+    actionButton("confirm3","lagre prosjekt i data base")
+
+  })
+
+  observeEvent(input$confirm3,{
+    session$reload()
+  })
 
   ## load local data according to selected community
-  in_dat<-eventReactive(input$confirm_btn,{
+  in_dat <- eventReactive(input$confirm_btn, {
     shinybusy::show_modal_spinner(text = "hent data", color = main_green)
     # Get the path to the folder
-    folder_path <- system.file(paste0("extdata/",input$kommune), package = "eikaCAN")
-
+    folder_path <- system.file(paste0("extdata/", input$kommune), package = "eikaCAN")
 
     ## save reading of files
     # List of file names to import
@@ -75,7 +110,7 @@ app_server <- function(input, output, session) {
                     "kvikkleire_84.gpkg",
                     "flomsone_200klima_84.gpkg")
 
-    rast_files <- c("main_ecotypes_25833.tif","myr_25833.tif","natur_skog_25833.tif")
+    rast_files <- c("main_ecotypes_25833.tif", "myr_25833.tif", "natur_skog_25833.tif")
 
     # Function to safely read a file
     safe_read_gpkg <- function(file_name) {
@@ -93,7 +128,7 @@ app_server <- function(input, output, session) {
     safe_read_tif <- function(file_name) {
       tryCatch(
         {
-          rast<-terra::rast(paste0(folder_path, "/", file_name))
+          rast <- terra::rast(paste0(folder_path, "/", file_name))
           terra::crs(rast) <- "EPSG:25833"
           return(rast)
         },
@@ -122,6 +157,7 @@ app_server <- function(input, output, session) {
     # Get bounding box of the commune
     bbox <- sf::st_bbox(in_gpkg[[2]])
     shinybusy::remove_modal_spinner()
+
     list(
       kom_dat = in_gpkg[[2]],
       vern = in_gpkg[[7]],
@@ -129,7 +165,7 @@ app_server <- function(input, output, session) {
       lulc = in_rast[[1]],
       nat_ku = in_gpkg[[6]],
       parcel = in_gpkg[[9]],
-      inon = in_gpkg[[5]]%>%dplyr::filter(vsone == "1"),
+      inon = in_gpkg[[5]] %>% dplyr::filter(vsone == "1"),
       vassdrag = in_gpkg[[4]],
       strand = in_gpkg[[3]],
       myr = in_rast[[2]],
@@ -142,55 +178,30 @@ app_server <- function(input, output, session) {
   })
 
   ## call module to view important nature in selected municipalities and show other tabs
-  observeEvent(input$confirm_btn,{
-    #req(in_dat)
-    # show_modal_spinner(text = "hent data", color = main_green)
+  observeEvent(input$confirm_btn, {
     showTab(inputId = "inTabset", target = "p0")
     showTab(inputId = "inTabset", target = "p1")
     showTab(inputId = "inTabset", target = "p2")
     showTab(inputId = "inTabset", target = "p3")
-    updateTabsetPanel(session, "inTabset",
-                      selected = "p0")
-
-    # adm_name<-as.character(input$kommune)
-    # in_files <- in_dat()
-    # ## valuable nature data module
-    # mod_data_server("data",adm_name, in_files)
-
-    ## screening server module
-    #mod_matrikkel_screen_server("screen_main", in_files)
+    updateTabsetPanel(session, "inTabset", selected = "p0")
   })
 
   ## if tabset panel changed to p2 call screening module
   observeEvent(input$inTabset, {
-    adm_name<-as.character(input$kommune)
+    adm_name <- as.character(input$kommune)
     in_files <- in_dat()
-    if(input$inTabset == "p0"){
-      updateTabsetPanel(session, "inTabset",
-                        selected = "p0")
-
-      ## valuable nature data module
-      mod_data_klima_server("data_klim",adm_name, in_files)
-
-    }else if(input$inTabset == "p1"){
-      updateTabsetPanel(session, "inTabset",
-                        selected = "p1")
-
-      ## valuable nature data module
-      mod_data_server("data",adm_name, in_files)
-
-    }else if(input$inTabset == "p2"){
-      updateTabsetPanel(session, "inTabset",
-                        selected = "p2")
-
-      ## valuable nature data module
+    if (input$inTabset == "p0") {
+      updateTabsetPanel(session, "inTabset", selected = "p0")
+      mod_data_klima_server("data_klim", adm_name, in_files)
+    } else if (input$inTabset == "p1") {
+      updateTabsetPanel(session, "inTabset", selected = "p1")
+      mod_data_server("data", adm_name, in_files)
+    } else if (input$inTabset == "p2") {
+      updateTabsetPanel(session, "inTabset", selected = "p2")
       mod_matrikkel_screen_server("screen_main", in_files)
-    }else{
-      updateTabsetPanel(session, "inTabset",
-                        selected = "p3")
+    } else {
+      updateTabsetPanel(session, "inTabset", selected = "p3")
       mod_report_server("report")
-
     }
   })
-
 }
