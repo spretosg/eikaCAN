@@ -7,6 +7,8 @@
 #' @noRd
 #'
 
+
+
 ## small function for distance and intersection calc
 # Function to calculate intersection and distance between shapes
 calc_min_distance <- function(geom, layers) {
@@ -18,22 +20,23 @@ calc_min_distance <- function(geom, layers) {
         intersection <- TRUE
         intersect_poly<-st_intersection(geom, layer)
         intersection_area <- st_area(intersect_poly)
-        intersect_poly<-st_geometry(st_intersection(geom, layer))
+        #intersect_poly<-st_geometry(st_intersection(geom, layer))
 
       }else{
         intersection <- FALSE
-        intersect_poly<- NULL
+        #intersect_poly<- NULL
         intersection_area <- NA
+        #intersect_poly<-NA
       }
 
       list(distance = as.integer(distance),
            intersection = intersection,
-           inter_poly = intersect_poly,
+           #inter_poly = intersect_poly,
            intersection_area = as.integer(intersection_area))
     }else{
       list(distance = NA,
            intersection = NA,
-           inter_poly = NA,
+           #inter_poly = NA,
            intersection_area = NA)
     }
 
@@ -103,6 +106,8 @@ calc_spat_stats <- function(drawn_sf, in_files) {
 
     # Apply function
     spat_stats <- calc_min_distance(single_polygon, vern_list)
+    ##polys
+
     print(spat_stats)
 
     # Extract closest distance E4-5_01 & KLIMA E1

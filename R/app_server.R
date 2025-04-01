@@ -15,50 +15,75 @@
 #' @import shinydashboard
 #' @import shinyBS
 app_server <- function(input, output, session) {
-  hideTab(inputId = "inTabset", target = "p0")
-  hideTab(inputId = "inTabset", target = "p1")
-  hideTab(inputId = "inTabset", target = "p2")
-  hideTab(inputId = "inTabset", target = "p3")
 
-  showModal(modalDialog(
-    title = "Velkommen til prototypen av eika.CAN verktøy",
-    easyClose = FALSE,  # Prevent closing on click outside
-    footer = NULL,  # Remove default footer buttons
-    size = "m",
-    tags$div(
-      tags$img(src="www/eika_logo.PNG", width = "100%", height = "auto"),
-      h4("eika.CAN er et verktøy for aktsomhetsvurdering av vesentlig klima & naturrisiko i virksomheten"),
-      br(),
-      h5("Prototypen er en showcase og inneholder foreløpig ingen konkrete analyser av naturinngrep. Data og analyser vil bli definert og implementert i løpet av 2025-prosjektet."),
-      br(),
-      h4(HTML("<b>Velg kommune prosjektet befinner seg i</b>")),
+  shinyjs::hide("app-content")
+  # Restart the app when clicking the Home button
+  observeEvent(input$home_button, {
+    session$reload()  # Reloads the app (effectively restarting it)
+  })
 
-      selectInput("kommune", "", choices = c("Lillestrøm", "Verdal", "Åfjord", "Grong")),
-      actionButton("confirm_btn", "Bekreft og gå videre", class = "btn-primary"),
+  # Activate Help Module
+  observeEvent(input$help_button, {
+    showModal(modalDialog(
+      mod_help_ui("help_module"),
+      title = "Help",
+      easyClose = TRUE
+    ))
+  })
 
-      br(), br(),
+  # Activate Info Module
+  observeEvent(input$info_button, {
+    showModal(modalDialog(
+      mod_info_ui("info_module"),
+      title = "Information",
+      easyClose = TRUE
+    ))
+  })
 
-      h4("Eller godkjenn prosjektet direkte"),
-      actionButton("confirm_dir", "Godkjenn"),
 
 
-      h5("Bare godkjenn prosjektet hvis det er sikkert at klima og naturrisiko er ikke relevant",     tags$span(
-        icon("info-circle", lib = "font-awesome"),
-        id = "info_icon",
-        style = "cursor: pointer; color: blue;"
-      ))
-      # Info icon with tooltip using shinyBS
 
-    )
-  ))
+  observe({
+    showModal(modalDialog(
+      title = "Velkommen til prototypen av eika.CAN verktøy",
+      easyClose = FALSE,  # Prevent closing on click outside
+      footer = NULL,  # Remove default footer buttons
+          tags$img(src="www/eika_logo.PNG", width = "100%", height = "auto"),
+          h4("eika.CAN er et verktøy for aktsomhetsvurdering av vesentlig klima & naturrisiko i virksomheten"),
+          br(),
+          h5("Prototypen er en showcase og inneholder foreløpig ingen konkrete analyser av naturinngrep. Data og analyser vil bli definert og implementert i løpet av 2025-prosjektet."),
+          br(),
+          h4(HTML("<b>Velg kommune prosjektet befinner seg i</b>")),
+          selectInput("kommune", "",
+                      choices = c("Lillestrøm", "Verdal", "Åfjord")),
+          actionButton("confirm_btn","Til evaluering"),
+          br(),
+          br(),
+          h4("Snarvei - bare bruk den hvis klima- og naturrisiko er ikke relevant"),
+          actionButton("confirm_dir","Snarvei")
 
+      # footer = tagList(
+      #   modalButton("Close"),
+      #   actionButton("enter_app_btn", "Enter the App")
+      # )
+    ))
+  })
+
+  # When the button is clicked, show the app content
+  observeEvent(input$confirm_btn, {
+    removeModal()  # Remove the modal (alert)
+
+    # Show the content and sidebar
+    shinyjs::show("app-content")
+  })
+
+  ## if shortcut
   observeEvent(input$confirm_dir,{
     removeModal()
     output$shortcut<-renderUI(
       tagList(
         textInput("eika_id","Saks nummer (kreditportalen)"),
         br(),
-        selectInput("kommune2", "", choices = c("Lillestrøm", "Verdal", "Åfjord", "Grong")),
         selectInput(
           "proj_type",
           "Velg prosjekttype",
@@ -90,12 +115,13 @@ app_server <- function(input, output, session) {
     session$reload()
   })
 
+
   ## load local data according to selected community
   in_dat <- eventReactive(input$confirm_btn, {
-    shinybusy::show_modal_spinner(text = "hent data", color = main_green)
+    shinybusy::show_modal_spinner(text = "hent data", color = "green")
     # Get the path to the folder
     folder_path <- system.file(paste0("extdata/", input$kommune), package = "eikaCAN")
-
+    # folder_path <- paste0("extdata/", input$kommune)
     ## save reading of files
     # List of file names to import
     gpkg_files <- c("friluft_filter_84.gpkg",
@@ -177,31 +203,14 @@ app_server <- function(input, output, session) {
     )
   })
 
-  ## call module to view important nature in selected municipalities and show other tabs
-  observeEvent(input$confirm_btn, {
-    showTab(inputId = "inTabset", target = "p0")
-    showTab(inputId = "inTabset", target = "p1")
-    showTab(inputId = "inTabset", target = "p2")
-    showTab(inputId = "inTabset", target = "p3")
-    updateTabsetPanel(session, "inTabset", selected = "p0")
-  })
 
   ## if tabset panel changed to p2 call screening module
-  observeEvent(input$inTabset, {
+  observeEvent(input$confirm_btn, {
     adm_name <- as.character(input$kommune)
     in_files <- in_dat()
-    if (input$inTabset == "p0") {
-      updateTabsetPanel(session, "inTabset", selected = "p0")
-      mod_data_klima_server("data_klim", adm_name, in_files)
-    } else if (input$inTabset == "p1") {
-      updateTabsetPanel(session, "inTabset", selected = "p1")
-      mod_data_server("data", adm_name, in_files)
-    } else if (input$inTabset == "p2") {
-      updateTabsetPanel(session, "inTabset", selected = "p2")
-      mod_matrikkel_screen_server("screen_main", in_files)
-    } else {
-      updateTabsetPanel(session, "inTabset", selected = "p3")
-      mod_report_server("report")
-    }
+    mod_data_klima_server("data_klim", adm_name, in_files)
+    mod_data_server("data", adm_name, in_files)
+    mod_matrikkel_screen_server("screen_main", in_files)
+    mod_report_server("report")
   })
 }

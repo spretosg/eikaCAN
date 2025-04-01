@@ -15,15 +15,15 @@ mod_report_ui <- function(id) {
     fluidRow(
       column(3, shinydashboard::valueBoxOutput(ns("n_proj"))),
       column(2),
-      column(3, shinydashboard::valueBoxOutput(ns("green_flag"))),
-      column(3, shinydashboard::valueBoxOutput(ns("red_flag")))
+      column(3, shinydashboard::valueBoxOutput(ns("natur"))),
+      column(3, shinydashboard::valueBoxOutput(ns("klima")))
     ),
-    br(),
-    fluidRow(
-      column(5, plotly::plotlyOutput(ns("intersection_stats"))),
-      column(2),
-      column(5,plotly::plotlyOutput(ns("areal_stats")))
-    )
+    # br(),
+    # fluidRow(
+    #   column(5, plotly::plotlyOutput(ns("intersection_stats"))),
+    #   column(2),
+    #   column(5,plotly::plotlyOutput(ns("areal_stats")))
+    # )
 
   )
 }
@@ -39,31 +39,31 @@ mod_report_server <- function(id){
     con <- DBI::dbConnect(duckdb::duckdb(), db_path)
 
     # Load the table into a dataframe
-    report_df <- DBI::dbGetQuery(con, "SELECT * FROM nature_risk")
+    report_df <- DBI::dbGetQuery(con, "SELECT * FROM nature_risk1")
 
     output$n_proj <- shinydashboard::renderValueBox({
       valueBox(
         value = nrow(report_df),  # Display the area value
         subtitle = "Prosjekter har blitt vudert",
-        icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
-        color = "olive"
+        icon = icon("number"),  # Choose an appropriate FontAwesome icon
+        color = "black"
       )
     })
 
-    output$green_flag <- shinydashboard::renderValueBox({
+    output$klima <- shinydashboard::renderValueBox({
       valueBox(
-        value = nrow(report_df%>%filter(n_intersection_val_nat>0)),  # Display the area value
-        subtitle = "Prosjekter ligger utenfor aktsomhetsområder",
-        icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
-        color = "green"
+        value = nrow(report_df%>%filter(n_intersection_klim_nat!=0)),  # Display the area value
+        subtitle = "Prosjekter har et høyt klimarisiko",
+        icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
+        color = "blue"
       )
     })
-    output$red_flag <- shinydashboard::renderValueBox({
+    output$natur <- shinydashboard::renderValueBox({
       valueBox(
-        value = nrow(report_df%>%filter(n_intersection_val_nat==0)),  # Display the area value
+        value = nrow(report_df%>%filter(n_intersection_val_nat!=0)),  # Display the area value
         subtitle = "Prosjekter har et høyt naturrisiko",
-        icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
-        color = "red"
+        icon = icon("leafe"),  # Choose an appropriate FontAwesome icon
+        color = "olive"
       )
     })
 

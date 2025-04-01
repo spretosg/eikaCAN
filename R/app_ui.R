@@ -4,37 +4,67 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @import shinydashboard
+#' @import shinythemes
+#' @import shinyjs
 #' @noRd
-main_green <- "#8abe23"
+
 app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
+
     golem_add_external_resources(),
-    # Your application UI logic
     fluidPage(
-      theme = shinythemes::shinytheme("flatly"),
       titlePanel(title = div(img(src="www/eika_logo.PNG", width ='120'), ".CAN - klima & naturrisiko"),windowTitle = "eika.CAN"),
+      useShinyjs(),
+      div(id = "app-content",
+          dashboardPage(
+            dashboardHeader(
+              tags$li(class = "dropdown",
+                      style = "display: flex; gap: 15px; align-items: center; padding-right: 15px;",
+                      actionLink("help_button", label = NULL, icon = icon("question-circle"),
+                                 style = "font-size: 20px;"),
+                      actionLink("info_button", label = NULL, icon = icon("info-circle"),
+                                 style = "font-size: 20px;"),
+                      actionLink("home_button", label = NULL, icon = icon("home"),
+                                 style = "font-size: 20px;")
+              )
+            ),
+            dashboardSidebar(
+              sidebarMenu(
+                menuItem("Naturrisiko", tabName = "nat_tab", icon = icon("leaf")),
+                menuItem("Klimarisiko", tabName = "klim_tab", icon = icon("cloud")),
+                menuItem("Aktsomhetsvurdering", tabName = "eval", icon = icon("clipboard-check")),
+                menuItem("Rapportering", tabName = "rep", icon = icon("file-alt"))
+              )
+            ),
+            dashboardBody(
+              tabItems(
+                tabItem(tabName = "nat_tab",
 
-      br(),
-      tabsetPanel(id = "inTabset",
-                  tabPanel("Klimarisiko", value = "p0",
-                           mod_data_klima_ui("data_klim")
-                  ),
+                          mod_data_ui("data")
 
-                  tabPanel("Naturriskiko", value = "p1",
-                           mod_data_ui("data")
-                           ),
+                ),
+                tabItem(tabName = "klim_tab",
+                  mod_data_klima_ui("data_klim")
 
-                  tabPanel("Aktsomhetsvurdering", value = "p2",
-                           mod_matrikkel_screen_ui("screen_main")
-                           ),
-                  tabPanel("Rapportering", value = "p3",
-                           br(),
-                           mod_report_ui("report"))
+                ),
+                tabItem(tabName = "eval",
+                          mod_matrikkel_screen_ui("screen_main")
+
+                ),
+                tabItem(tabName = "rep",
+
+                           mod_report_ui("report")
+
+                )
+              )
+            )
+          )
 
       ),
       uiOutput("shortcut")
-    )
+
+    )#/fluid page
   )
 }
 
@@ -46,10 +76,15 @@ app_ui <- function(request) {
 #' @import shiny
 #' @importFrom golem add_resource_path activate_js favicon bundle_resources
 #' @noRd
+
 golem_add_external_resources <- function() {
   add_resource_path(
     "www",
     app_sys("app/www")
+  )
+  add_resource_path(
+    "extdata",
+    app_sys("extdata")
   )
 
   tags$head(
@@ -58,7 +93,5 @@ golem_add_external_resources <- function() {
       path = app_sys("app/www"),
       app_title = "eikaCAN"
     )
-    # Add here other external resources
-    # for example, you can add shinyalert::useShinyalert()
   )
 }

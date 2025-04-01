@@ -15,8 +15,10 @@ Imports:
     DT,
     golem,
     leaflet,
+    pkgload,
     shiny,
     shinydashboard,
+    shinyjs,
     shinythemes
 Suggests: 
     knitr,

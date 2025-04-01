@@ -10,6 +10,7 @@
 mod_help_ui <- function(id) {
   ns <- NS(id)
   tagList(
+    h4("Help page for eika.CAN")
 
   )
 }

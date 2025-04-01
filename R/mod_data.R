@@ -20,66 +20,74 @@
 mod_data_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
-    uiOutput(ns("title")),
+    h2("Naturverdier"),
     br(),
-    bslib::value_box(
-      title = "",
-      value = "",
-      h4("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av svært viktig natur». Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med gjeldende byggeforskrifter."),
-      theme = bslib::value_box_theme(bg = main_green, fg = "black"),
-      showcase= bsicons::bs_icon("book"),
-    ),
+    fluidRow(
+      column(5,
+             selectInput(
+               ns("layer_select"),
+               "Velg et kartlag for viktig natur",
+               choices = c(
+                 "",
+                 "Naturvernområder" = "nat_vern",
+                 "Myrområder" = "myr",
+                 "Villreinområder" = "rein",
+                 "Pressområder i strandsonen"="press_strand",
+                 "Inngrepsfri natur"="inon",
+                 "Vassdragsnatur"="water",
+                 "Utvalgte og truede naturtyper" = "nat_ku",
+                 "Friluftslivsområder" = "friluft",
+                 "Naturskog" = "forest"),
+               selected = ""
+             )),
+      column(7,
+             bslib::value_box(
+               title = "",
+               value = "",
+               h3("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av viktig natur». Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med kommunale, gjeldende byggeforskrifter."),
+               theme = bslib::value_box_theme(bg = "white", fg = "black"),
+               showcase= bsicons::bs_icon("book"),
+             ))
+    ),#/row1,
     br(),
-    sidebarPanel(
-      selectInput(
-        ns("layer_select"),
-        "Velg et kartlag for ”særlig viktig natur”",
-        choices = list(
-          "Særlig viktig natur" = c("Naturvernområder" = "nat_vern",
-                                    "Myrområder" = "myr",
-                                    "Villreinområder" = "rein",
-                                    "Pressområder i strandsonen"="press_strand",
-                                    "Inngrepsfri natur"="inon",
-                                    "Vassdragsnatur"="water"),
-          "Andre viktige naturverdier" = c("Utvalgte og truede naturtyper" = "nat_ku",
-                                           "Friluftslivsområder" = "friluft",
-                                           "Naturskog" = "forest")
-        ),
-
-        selected = NULL
-      ),
-      tags$hr(),
-      tags$head(tags$style(HTML("
+    fluidRow(
+      column(5,
+             shinydashboard::box(title = "Enkelt forklart",
+                                 status = "primary",
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 #includeHTML("nature_types_text/utv_true_nat.html"),
+                                 tags$hr(),
+                                 tags$head(tags$style(HTML("
       #layer_image img { max-width: 100%; height: 100%; }
     "))),
-      textOutput(ns("layer_description_short")),
-      br(),
-      imageOutput(ns("layer_image"), height = "auto")
+                                 textOutput(ns("layer_description_short")),
+                                 br(),
+                                 imageOutput(ns("layer_image"), height = "auto"),
+                                 collapsed = F,
+                                 width = 12),
+             shinydashboard::box(title = "Litt mer vitenskapelig forklart",
+                                 status = "primary",
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 #includeHTML("nature_types_text/utv_true_nat.html"),
+                                 textOutput(ns("layer_description_long")),
+                                 collapsed = TRUE,
+                                 width = 12),
+             shinydashboard::box(title = "Mer informasjon ",
+                                 status = "primary",
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 textOutput(ns("layer_mer")),
+                                 collapsed = TRUE,
+                                 width = 12)
+      ),
+      column(7,
+             leaflet::leafletOutput(ns("data_map"), height = "1000")
+      )
+    )#/row2
 
-    ),
 
-    mainPanel(
-
-      leaflet::leafletOutput(ns("data_map"), height = "600px"),
-      br(),
-      shinydashboard::box(title = "Litt mer vitenskapelig forklart",
-                          status = "primary",
-                          solidHeader = TRUE,
-                          collapsible = TRUE,
-                          #includeHTML("nature_types_text/utv_true_nat.html"),
-                          textOutput(ns("layer_description_long")),
-                          collapsed = TRUE,
-                          width = 12),
-      shinydashboard::box(title = "Mer informasjon ",
-                          status = "primary",
-                          solidHeader = TRUE,
-                          collapsible = TRUE,
-                          textOutput(ns("layer_mer")),
-                          collapsed = TRUE,
-                          width = 12),
-
-
-    )
   )
 }
 
@@ -223,7 +231,7 @@ Naturskog er viktig fordi veldig mange rødlistede arter finnes i slike skoger. 
     observe({
       req(input$layer_select)
       selected_layer <- input$layer_select
-      show_modal_spinner(text = "hent data", color = main_green)
+      show_modal_spinner(text = "hent data", color = "green")
       if(selected_layer == "water"){
         leaflet::leafletProxy("data_map") %>%
           leaflet::clearTiles()%>%
