@@ -103,6 +103,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
     })
 
+
     distances<-eventReactive(input$confirm,{
       req(results())
       results<-results()
@@ -111,6 +112,14 @@ mod_matrikkel_screen_server <- function(id, in_files){
         distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_areas)%>%
           summarize(min_dist_m = min(as.integer(min_dist),na.rm = T),
                     intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
+
+
+
+
+
+
+        #   filtered_polys <- polygons[!sapply(polys, is.null)]
+        # combined_sf <- do.call(rbind, filtered_polys)
 
         distances$valuable_areas<-unlist(distances$valuable_areas)
         ## add skog and myr
@@ -132,7 +141,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           skog<-c("Naturskog",0,sub_skog$area_m2)
           distances<-rbind(distances,skog)
         }
-        print(distances)
+
         # distances<-distances%>%filter(!is.na(min_dist_m))
 
         return(distances)
@@ -141,12 +150,26 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
     })
 
-    # intersection_geoms<-eventReactive(input$confirm,{
-    #   req(distances)
-    #   req(results)
-    #   results<-results()
-    #   geoms <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_areas)%>%filter(geometry != "NULL")
-    # })
+    polygons<-eventReactive(input$confirm,{
+      req(results())
+      results<-results()
+      req(distances())
+      distances<-distances()
+      distances$min_dist_m<-as.integer(distances$min_dist_m)
+
+      if(max(distances$min_dist_m,na.rm = T)>0){
+        inter_poly <- do.call(rbind, lapply(results, function(x) x$polygon_geom_df))
+        inter_poly <- inter_poly %>%
+          group_by(layer_id) %>%
+          summarize(geometry = st_union(geom)) %>%
+          ungroup()%>%st_set_crs( 25833)
+
+      }else{
+        inter_poly<-NULL
+      }
+      print(inter_poly)
+      return(inter_poly)
+    })
 
 
 
@@ -154,6 +177,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
     observeEvent(input$confirm,{
       req(parcels_sel())
       distances<-distances()
+      polygons<-polygons()
       distances$min_dist_m<-as.integer(distances$min_dist_m)
       distances$intersect_area_m2<-as.integer(distances$intersect_area_m2)
       # print(distances)
@@ -185,6 +209,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
             fluidPage(
               fluidRow(
                 h3("Prosjektområdet"),
+                h4("I rød ser man arealer av prosjektområder som er innenfor klima eller naturaktsomhetsområder."),
                 br(),
                 leafletOutput(ns("map_parcel")),
               ),
@@ -230,9 +255,29 @@ mod_matrikkel_screen_server <- function(id, in_files){
             )
           ))
 
+        #base map
+
+
         ## the map ev, some wms layers?
         output$map_parcel <- renderLeaflet({
-          leaflet(parcels_sel) %>%
+          if(!is.null(polygons)){
+            polygons<-st_transform(polygons,st_crs(parcels_sel))
+            base_map<-leaflet(parcels_sel) %>%
+              addProviderTiles(providers$Esri.WorldImagery,options = tileOptions(minZoom = 8, maxZoom = 18),group = "World image")%>%
+              addWMSTiles(
+                baseUrl = "https://wms.geonorge.no/skwms1/wms.norges_grunnkart?service=wms&request=getcapabilities",
+                layers = "norges_grunnkart",  # Choose from 'topo4', 'norges_grunnkart', etc.
+                options = WMSTileOptions(format = "image/png", transparent = TRUE),
+                attribution = "© Kartverket",
+                group = "Kartverket basiskart"
+              )%>%
+              addPolygons(color = "green",fillColor = "green", weight = 3, smoothFactor = 0.5,
+                          opacity = 1.0, fillOpacity = 0.5)%>%
+              addLayersControl(baseGroups = c("Kartverket basiskart","World image"),
+                               options = layersControlOptions(collapsed = FALSE))%>%
+              addPolygons(data = polygons , color = "red", fillColor = "red", weight = 3, smoothFactor = 0.5,
+                          opacity = 1.0, fillOpacity = )
+          }else{          base_map<-leaflet(parcels_sel) %>%
             addProviderTiles(providers$Esri.WorldImagery,options = tileOptions(minZoom = 8, maxZoom = 18),group = "World image")%>%
             addWMSTiles(
               baseUrl = "https://wms.geonorge.no/skwms1/wms.norges_grunnkart?service=wms&request=getcapabilities",
@@ -241,10 +286,11 @@ mod_matrikkel_screen_server <- function(id, in_files){
               attribution = "© Kartverket",
               group = "Kartverket basiskart"
             )%>%
-            addPolygons(color = "orange", weight = 3, smoothFactor = 0.5,
-                        opacity = 1.0, fillOpacity = 0)%>%
+            addPolygons(color = "green",fillColor = "green", weight = 3, smoothFactor = 0.5,
+                        opacity = 1.0, fillOpacity = 0.5)%>%
             addLayersControl(baseGroups = c("Kartverket basiskart","World image"),
-                             options = layersControlOptions(collapsed = FALSE))
+                             options = layersControlOptions(collapsed = FALSE))}
+
         })
 
         # here calculate the stats for the parcel

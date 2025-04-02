@@ -9,34 +9,57 @@
 
 
 
+
+return_inters_poly<-function(geom,layers){
+  polys <- lapply(seq_along(layers), function(i) {
+    intersect_poly <- tryCatch({
+      st_intersection(geom, layers[[i]])
+    }, error = function(e) NULL)  # Catch errors and return NULL instead of breaking
+
+    if (is.null(intersect_poly) || nrow(intersect_poly) == 0) {
+      return(NULL)
+    } else {
+      intersect_poly %>% select() %>% mutate(layer_id = names(layers[i]))
+    }
+  })
+
+
+
+  polys <- polys[!sapply(polys, is.null)]
+  # Combine all valid sf objects into one
+  polys_sf <- do.call(rbind, polys)
+
+  return(polys_sf)
+}
 ## small function for distance and intersection calc
 # Function to calculate intersection and distance between shapes
 calc_min_distance <- function(geom, layers) {
-  results <- lapply(layers, function(layer) {
-    if(!is.null(layer)){
-      distance <- st_distance(geom, layer) %>% min()  # Closest distance
+  results <- lapply(seq_along(layers), function(i) {
+    #print(names(layers[i]))
+    if(!is.null(layers[[i]])){
+      distance <- st_distance(geom, layers[[i]]) %>% min()  # Closest distance
       if(as.numeric(distance) == 0){
         # Compute intersection AREA
         intersection <- TRUE
-        intersect_poly<-st_intersection(geom, layer)
+        intersect_poly<-st_intersection(geom, layers[[i]])%>%select()%>%mutate(layer_id = names(layers[i]))
         intersection_area <- st_area(intersect_poly)
-        #intersect_poly<-st_geometry(st_intersection(geom, layer))
+
 
       }else{
         intersection <- FALSE
-        #intersect_poly<- NULL
+        intersect_poly<- NULL
         intersection_area <- NA
-        #intersect_poly<-NA
+
       }
 
       list(distance = as.integer(distance),
            intersection = intersection,
-           #inter_poly = intersect_poly,
+           # inter_poly = intersect_poly,
            intersection_area = as.integer(intersection_area))
     }else{
       list(distance = NA,
            intersection = NA,
-           #inter_poly = NA,
+           # inter_poly = NA,
            intersection_area = NA)
     }
 
@@ -81,6 +104,8 @@ transform_sf_objects <- function(obj, crs_target) {
   }
 }
 
+
+
 # a function to calculate spatial statistics for a given parcel to cover reporting data points
 calc_spat_stats <- function(drawn_sf, in_files) {
   # Target CRS
@@ -93,6 +118,7 @@ calc_spat_stats <- function(drawn_sf, in_files) {
   # a subset list of just the objects to calculate distance from parcel
   vern_list<-list(in_files$vern,in_files$nat_ku,in_files$inon,in_files$vassdrag,in_files$strand,in_files$red_listed,in_files$friluft,in_files$flom, in_files$kvikk)
   vern_vector<-c("Vernområder","Natur av forvaltningsintersse","Inngrepsfrie natur","Vassdragsnatur","Strandsone","Rød lista arter", "Friluftslivsområder","Flomsoner 200år klima","Kvikkleire risikoområde")
+  names(vern_list)<-vern_vector
 
   # Initialize an empty list to store results for each polygon
   results_list <- list()
@@ -107,8 +133,7 @@ calc_spat_stats <- function(drawn_sf, in_files) {
     # Apply function
     spat_stats <- calc_min_distance(single_polygon, vern_list)
     ##polys
-
-    print(spat_stats)
+    polygons_inter <-return_inters_poly(single_polygon, vern_list)
 
     # Extract closest distance E4-5_01 & KLIMA E1
     df<-cbind(vern_vector,
@@ -117,12 +142,12 @@ calc_spat_stats <- function(drawn_sf, in_files) {
     #boolean intersection
     sapply(spat_stats, function(x) x$intersection),
     #if intersection intersection poly
-    sapply(spat_stats, function(x) x$inter_poly),
+    # sapply(spat_stats, function(x) x$inter_poly),
     #and ev. area of intersection
     sapply(spat_stats, function(x) x$intersection_area))
 
     df<-as.data.frame(df)
-    colnames(df)<-c("valuable_areas","min_dist","intersect","geometry","intersection_area")
+    colnames(df)<-c("valuable_areas","min_dist","intersect","intersection_area")
 
     ################## extract overlay with lulc
     lulc_overlay <- calc_overlay(single_polygon,in_files$lulc,sum)
@@ -165,6 +190,7 @@ calc_spat_stats <- function(drawn_sf, in_files) {
       polygon_id = i,
       project_area_m2 = as.numeric(proj_area),
       distances_intersection = df,
+      polygon_geom_df = polygons_inter,
       m2_nat_loss = sum_natureloss,
       lulc_stats = lulc_summary,
       myr_stats = myr_summary,
