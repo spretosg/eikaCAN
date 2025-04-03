@@ -33,7 +33,7 @@ app_ui <- function(request) {
                       actionLink("help_button", label = NULL, icon = icon("question-circle"),
                                  style = "font-size: 20px;"),
                       actionLink("info_button", label = NULL, icon = icon("info-circle"),
-                                 style = "font-size: 20px;"),
+                                 style = "font-size: 20px;",onclick = "window.open('https://rpubs.com/retospielhofer/1292830/', '_blank')"),
                       actionLink("home_button", label = NULL, icon = icon("home"),
                                  style = "font-size: 20px;")
               )

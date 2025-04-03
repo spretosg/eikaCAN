@@ -33,11 +33,7 @@ app_server <- function(input, output, session) {
 
   # Activate Info Module
   observeEvent(input$info_button, {
-    showModal(modalDialog(
-      mod_info_ui("info_module"),
-      title = "Information",
-      easyClose = TRUE
-    ))
+      mod_info_ui("info_module")
   })
 
 
