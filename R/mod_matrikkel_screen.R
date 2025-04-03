@@ -36,9 +36,9 @@ mod_matrikkel_screen_ui <- function(id) {
                  choices = c("", "Bolig" = "house", "Næring" = "industry","Landbruk"="agri"),
                  selected = ""
                ),
-               numericInput(ns("bruks_nr"),"Bruksnummer",NA),
+               numericInput(ns("bruks_nr"),"Bruksnummer",NA, min = 1, step = 1),
                br(),
-               numericInput(ns("gards_nr"),"Gårdsnummer",NA),
+               numericInput(ns("gards_nr"),"Gårdsnummer",NA, min = 1, step = 1),
                br(),
                uiOutput(ns("cond_btn"))),
         column(7,
@@ -94,7 +94,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
       req(parcels_sel())
       parcels_sel<-parcels_sel()
       shinybusy::show_modal_spinner(text = "beregn klima- og naturrisiko", color = "green")
-      if(!is.null(parcels_sel)){
+      if(!is.null(parcels_sel) & nrow(parcels_sel)>0){
         results <- calc_spat_stats(parcels_sel, in_files)
       }
 
@@ -103,23 +103,15 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
     })
 
-
     distances<-eventReactive(input$confirm,{
       req(results())
       results<-results()
-      if(nrow(parcels_sel())>0){
+      if(nrow(parcels_sel())>0 & !is.null(results)){
         # Extract intersections E4.IRO-1_14
         distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_areas)%>%
           summarize(min_dist_m = min(as.integer(min_dist),na.rm = T),
                     intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
 
-
-
-
-
-
-        #   filtered_polys <- polygons[!sapply(polys, is.null)]
-        # combined_sf <- do.call(rbind, filtered_polys)
 
         distances$valuable_areas<-unlist(distances$valuable_areas)
         ## add skog and myr
@@ -157,7 +149,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
       distances<-distances()
       distances$min_dist_m<-as.integer(distances$min_dist_m)
 
-      if(max(distances$min_dist_m,na.rm = T)>0){
+      if(max(distances$min_dist_m,na.rm = T)>0 & !is.null(distances)){
         inter_poly <- do.call(rbind, lapply(results, function(x) x$polygon_geom_df))
         inter_poly <- inter_poly %>%
           group_by(layer_id) %>%
@@ -167,22 +159,13 @@ mod_matrikkel_screen_server <- function(id, in_files){
       }else{
         inter_poly<-NULL
       }
-      print(inter_poly)
       return(inter_poly)
     })
 
-
-
-
+    ## the UI and the plots
     observeEvent(input$confirm,{
       req(parcels_sel())
-      distances<-distances()
-      polygons<-polygons()
-      distances$min_dist_m<-as.integer(distances$min_dist_m)
-      distances$intersect_area_m2<-as.integer(distances$intersect_area_m2)
-      # print(distances)
-      results<-results()
-      parcels_sel<-parcels_sel()
+       parcels_sel<-parcels_sel()
       #if no parcel is found
       if(is.null(parcels_sel) | nrow(parcels_sel)==0){
         shinyalert::shinyalert(
@@ -203,6 +186,11 @@ mod_matrikkel_screen_server <- function(id, in_files){
         )
 
       }else{
+        distances<-distances()
+        polygons<-polygons()
+        distances$min_dist_m<-as.integer(distances$min_dist_m)
+        distances$intersect_area_m2<-as.integer(distances$intersect_area_m2)
+        results<-results()
         ## dashboard and data curation of results
         output$dashboard<-renderUI(
           tagList(

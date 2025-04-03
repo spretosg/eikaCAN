@@ -14,6 +14,15 @@ app_ui <- function(request) {
 
     golem_add_external_resources(),
     fluidPage(
+      tags$head(
+        tags$style(HTML("
+
+      body {
+        padding-bottom: 100px; /* Adjust this value to match the footer height */
+        font-size: 18px;
+      }
+    "))
+      ),
       titlePanel(title = div(img(src="www/eika_logo.PNG", width ='120'), ".CAN - klima & naturrisiko"),windowTitle = "eika.CAN"),
       useShinyjs(),
       div(id = "app-content",
@@ -62,7 +71,22 @@ app_ui <- function(request) {
           )
 
       ),
-      uiOutput("shortcut")
+      uiOutput("shortcut"),
+      tags$footer(
+        style = "position:fixed; bottom:0; left:0; width:100%;
+             background-color:#f8f9fa; color:#333; padding:10px; text-align:center;
+             font-size: 12px;
+             border-top:1px solid #ddd; z-index: -1;",
+        HTML("
+      <p>Licensed under <a href='https://www.gnu.org/licenses/gpl-3.0.txt' target='_blank'>GNU General Public License v3.0</a>.</p>
+    "),
+        div(
+          style = "display: flex; justify-content: center; align-items: center;",
+          img(src = "www/NINA_logo.png", height = "40px", style = "margin-right:10px;"),
+          img(src = "www/cicero_logo.png", height = "40px", style = "margin-right:10px;"),
+          span("CICERO & NINA © 2025 CAN.tools")
+        )
+      )
 
     )#/fluid page
   )

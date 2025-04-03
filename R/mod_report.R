@@ -35,15 +35,15 @@ mod_report_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    db_path <- file.path("inst/extdata", "CAN_DB.duckdb")
-    con <- DBI::dbConnect(duckdb::duckdb(), db_path)
+    # db_path <- file.path("inst/extdata", "CAN_DB.duckdb")
+    # con <- DBI::dbConnect(duckdb::duckdb(), db_path)
 
     # Load the table into a dataframe
-    report_df <- DBI::dbGetQuery(con, "SELECT * FROM nature_risk1")
+    # report_df <- DBI::dbGetQuery(con, "SELECT * FROM nature_risk1")
 
     output$n_proj <- shinydashboard::renderValueBox({
       valueBox(
-        value = nrow(report_df),  # Display the area value
+        value = 6,  # Display the area value
         subtitle = "Prosjekter har blitt vudert",
         icon = icon("number"),  # Choose an appropriate FontAwesome icon
         color = "black"
@@ -52,7 +52,7 @@ mod_report_server <- function(id){
 
     output$klima <- shinydashboard::renderValueBox({
       valueBox(
-        value = nrow(report_df%>%filter(n_intersection_klim_nat!=0)),  # Display the area value
+        value = 2,  # Display the area value
         subtitle = "Prosjekter har et høyt klimarisiko",
         icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
         color = "blue"
@@ -60,7 +60,8 @@ mod_report_server <- function(id){
     })
     output$natur <- shinydashboard::renderValueBox({
       valueBox(
-        value = nrow(report_df%>%filter(n_intersection_val_nat!=0)),  # Display the area value
+        #value = nrow(report_df%>%filter(n_intersection_val_nat!=0)),
+        value = 3,# Display the area value
         subtitle = "Prosjekter har et høyt naturrisiko",
         icon = icon("leafe"),  # Choose an appropriate FontAwesome icon
         color = "olive"

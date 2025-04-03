@@ -90,9 +90,9 @@ app_server <- function(input, output, session) {
           choices = c("", "Bolig" = "house", "Næring" = "industry","Landbruk"="agri"),
           selected = ""
         ),
-        numericInput("bruks_nr","Bruksnummer",NA),
+        numericInput("bruks_nr","Bruksnummer",NA,min = 1, step = 1),
         br(),
-        numericInput("gards_nr","Gårdsnummer",NA),
+        numericInput("gards_nr","Gårdsnummer",NA,min = 1, step = 1),
         br(),
         uiOutput("cond_btn")
       )

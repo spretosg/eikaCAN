@@ -23,7 +23,18 @@ mod_data_ui <- function(id) {
     h2("Naturverdier"),
     br(),
     fluidRow(
-      column(5,
+
+             bslib::value_box(
+               title = "",
+               value = "",
+               h3("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av viktig natur». Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med kommunale, gjeldende byggeforskrifter."),
+               theme = bslib::value_box_theme(bg = "white", fg = "black"),
+               showcase= bsicons::bs_icon("book"),
+             )
+    ),#/row1,
+    br(),
+    fluidRow(
+      column(6,
              selectInput(
                ns("layer_select"),
                "Velg et kartlag for viktig natur",
@@ -39,34 +50,25 @@ mod_data_ui <- function(id) {
                  "Friluftslivsområder" = "friluft",
                  "Naturskog" = "forest"),
                selected = ""
-             )),
-      column(7,
-             bslib::value_box(
-               title = "",
-               value = "",
-               h3("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av viktig natur». Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med kommunale, gjeldende byggeforskrifter."),
-               theme = bslib::value_box_theme(bg = "white", fg = "black"),
-               showcase= bsicons::bs_icon("book"),
-             ))
-    ),#/row1,
-    br(),
-    fluidRow(
-      column(5,
-             shinydashboard::box(title = "Enkelt forklart",
-                                 status = "primary",
-                                 solidHeader = TRUE,
-                                 collapsible = TRUE,
-                                 #includeHTML("nature_types_text/utv_true_nat.html"),
-                                 tags$hr(),
-                                 tags$head(tags$style(HTML("
+             )
+             ),
+      column(6,
+             tags$hr(),
+             tags$head(tags$style(HTML("
       #layer_image img { max-width: 100%; height: 100%; }
     "))),
-                                 textOutput(ns("layer_description_short")),
-                                 br(),
-                                 imageOutput(ns("layer_image"), height = "auto"),
-                                 collapsed = F,
-                                 width = 12),
-             shinydashboard::box(title = "Litt mer vitenskapelig forklart",
+             imageOutput(ns("layer_image"), height = "auto"),
+             br(),
+             textOutput(ns("layer_description_short"))),
+
+    ),
+    br(),
+    fluidRow(
+      leaflet::leafletOutput(ns("data_map"))
+    ),
+    br(),
+    fluidRow(
+              shinydashboard::box(title = "Litt mer vitenskapelig forklart",
                                  status = "primary",
                                  solidHeader = TRUE,
                                  collapsible = TRUE,
@@ -81,10 +83,6 @@ mod_data_ui <- function(id) {
                                  textOutput(ns("layer_mer")),
                                  collapsed = TRUE,
                                  width = 12)
-      ),
-      column(7,
-             leaflet::leafletOutput(ns("data_map"), height = "1000")
-      )
     )#/row2
 
 
