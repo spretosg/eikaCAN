@@ -7,7 +7,7 @@
 #' @import shinythemes
 #' @import shinyjs
 #' @noRd
-
+Sys.setlocale("LC_ALL", "Norwegian")
 app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
@@ -38,14 +38,41 @@ app_ui <- function(request) {
                                  style = "font-size: 20px;")
               )
             ),
-            dashboardSidebar(
+            dashboardSidebar(width = 400,
+              tags$head(
+                tags$style(HTML("
+      /* Change sidebar background color */
+      .main-sidebar {
+        background-color: #1E3A5F !important;
+      }
+
+      /* Make menu text bigger */
+      .sidebar-menu > li > a {
+        font-size: 22px !important;
+        font-weight: bold !important;
+      }
+
+      /* Change menu item background when hovered */
+      .sidebar-menu > li:hover {
+        background-color: #2C5B8F !important;
+      }
+
+
+      /* Change icon color */
+      .sidebar-menu i {
+        color: white !important;
+      }
+    "))
+              ),
+
               sidebarMenu(
-                menuItem("Naturrisiko", tabName = "nat_tab", icon = icon("leaf")),
-                menuItem("Klimarisiko", tabName = "klim_tab", icon = icon("cloud")),
-                menuItem("Aktsomhetsvurdering", tabName = "eval", icon = icon("clipboard-check")),
-                menuItem("Rapportering", tabName = "rep", icon = icon("file-alt"))
+                menuItem("Se kriterier for naturrisiko", tabName = "nat_tab", icon = icon("leaf")),
+                menuItem("Se kriterier for klimarisiko", tabName = "klim_tab", icon = icon("cloud")),
+                menuItem("Gjør en akstomhetsvurdering", tabName = "eval", icon = icon("clipboard-check")),
+                menuItem("Oversikt portefølje", tabName = "rep", icon = icon("file-alt"))
               )
-            ),
+            )
+            ,
             dashboardBody(
               tabItems(
                 tabItem(tabName = "nat_tab",
@@ -84,7 +111,7 @@ app_ui <- function(request) {
           style = "display: flex; justify-content: center; align-items: center;",
           img(src = "www/NINA_logo.png", height = "40px", style = "margin-right:10px;"),
           img(src = "www/cicero_logo.png", height = "40px", style = "margin-right:10px;"),
-          span("CICERO & NINA © 2025 CAN.tools")
+          span("NINA & CICERO © 2025 CAN.tools")
         )
       )
 

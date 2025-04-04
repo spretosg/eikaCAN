@@ -116,8 +116,36 @@ calc_spat_stats <- function(drawn_sf, in_files) {
   in_files <- lapply(in_files, transform_sf_objects, crs_target = new_crs)
 
   # a subset list of just the objects to calculate distance from parcel
-  vern_list<-list(in_files$vern,in_files$nat_ku,in_files$inon,in_files$vassdrag,in_files$strand,in_files$red_listed,in_files$friluft,in_files$flom, in_files$kvikk)
-  vern_vector<-c("Vernområder","Natur av forvaltningsintersse","Inngrepsfrie natur","Vassdragsnatur","Strandsone","Rød lista arter", "Friluftslivsområder","Flomsoner 200år klima","Kvikkleire risikoområde")
+  vern_list<-list(in_files$vern,
+                  in_files$nat_ku,
+                  in_files$inon,
+                  in_files$vassdrag,
+                  in_files$strand,
+                  in_files$red_listed,
+                  in_files$friluft,
+                  in_files$flom_klima,
+                  in_files$kvikk,
+                  in_files$flom_20,
+                  in_files$flom_200,
+                  in_files$flom_1000,
+                  in_files$skred_100,
+                  in_files$skred_1000,
+                  in_files$flom_akt)
+  vern_vector<-c("Vernområder",
+                 "Natur av forvaltningsintersse",
+                 "Inngrepsfrie natur",
+                 "Vassdragsnatur",
+                 "Strandsone",
+                 "Rød lista arter",
+                 "Friluftslivsområder",
+                 "Sone 200-årsflom klimaendring",
+                 "Kvikkleire risikoområde",
+                 "Sone 20-årsflom",
+                 "Sone 200-årsflom",
+                 "Sone 1000-årsflom",
+                 "Sone 100-årsskred",
+                 "Sone 1000-årsskred",
+                 "Flom aktsomhetsområder")
   names(vern_list)<-vern_vector
 
   # Initialize an empty list to store results for each polygon

@@ -10,7 +10,7 @@
 mod_report_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h2("Portefølje rapport"),
+    h2("Oversikt portefølje"),
     br(),
     fluidRow(
       column(3, shinydashboard::valueBoxOutput(ns("n_proj"))),

@@ -40,12 +40,18 @@ mod_matrikkel_screen_ui <- function(id) {
                br(),
                numericInput(ns("gards_nr"),"Gårdsnummer",NA, min = 1, step = 1),
                br(),
+               tags$div(
+                 numericInput(ns("teig_nr"),"Teignummer",NULL, min = 1, step = 1),
+                 actionLink(ns("info_teig"), label = NULL, icon = icon("info-circle"),
+                            style = "font-size: 20px; color: blue; margin-left: 10px;"),
+                 style = "display: flex; align-items: center;"
+               ),
                uiOutput(ns("cond_btn"))),
         column(7,
                bslib::value_box(
                  title = "",
                  value = "",
-                 h3("Med bruks- og gårdsnummer lokaliseres prosjektområdet. Deretter bergegnes klima- og naturrisiko eksplisitt for ditt prosjekt. Til slutt kan du lagre statistikk til rapporterings data base og csv filer."),
+                 h3("Med bruks- og gårdsnummer bestemmer matrikkelenehet og lokaliseres prosjektområdet. Deretter bergegnes klima- og naturrisiko eksplisitt for ditt prosjekt. Til slutt kan du lagre statistikk til rapporterings data base og csv filer."),
                  theme = bslib::value_box_theme(bg = "white", fg = "black"),
                  showcase= bsicons::bs_icon("book"),
                  br(),
@@ -65,6 +71,16 @@ mod_matrikkel_screen_server <- function(id, in_files){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    #info teig - matrikkel
+    observeEvent(input$info_teig, {
+      showModal(modalDialog(
+        title = "Matrikkel med flere teig",
+        h4("Husk at en matrikkel kan inneholde flere teiger, så hvis det er mulig, kan du også definere teignummer. Hvis ikke, beregnes risikoen for hele matrikkelen og eventuelt flere teiger."),
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
+    })
+
     #get the in_files for valuable nature
     parcel<-in_files$parcel
 
@@ -74,6 +90,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         need(input$proj_type !='',''),
         need(!is.na(input$bruks_nr),''),
         need(!is.na(input$gards_nr),''),
+        need(input$eika_id !='','')
       )
 
         actionButton(ns("confirm"),"beregn klima- og naturrisiko")
@@ -84,7 +101,12 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
     parcels_sel<-eventReactive(input$confirm,{
       conc_num<-paste0(input$gards_nr,"/",input$bruks_nr)
-      parcels_sel<-parcel%>%filter(matrikkeln == conc_num)
+      print(input$teig_nr)
+      if(!is.na(input$teig_nr)){
+        parcels_sel<-parcel%>%filter(matrikkeln == conc_num & teigId ==input$teig_nr)
+      }else{
+        parcels_sel<-parcel%>%filter(matrikkeln == conc_num)
+      }
       parcels_sel<-sf::st_as_sf(parcels_sel)
     })
 
@@ -94,7 +116,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
       req(parcels_sel())
       parcels_sel<-parcels_sel()
       shinybusy::show_modal_spinner(text = "beregn klima- og naturrisiko", color = "green")
-      if(!is.null(parcels_sel) & nrow(parcels_sel)>0){
+      if(nrow(parcels_sel)>0){
         results <- calc_spat_stats(parcels_sel, in_files)
       }
 
@@ -203,7 +225,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
               ),
               # main KPI of both
               fluidRow(column(6,
-                              h3("Resultat"),
+                              h3("Resultat aktsomhetsvurdering"),
                               br(),
                                 shinydashboard::valueBoxOutput(ns("screening_light")),
                                 shinydashboard::valueBoxOutput(ns("screening_light_klim"))
@@ -221,7 +243,6 @@ mod_matrikkel_screen_server <- function(id, in_files){
                 shinydashboard::box(title = "Detailjer klimarisiko",
                                     collapsible = TRUE, collapsed = T, width = 12, status = "primary",
                                     column(12,
-                                           h4("Aktsomhetsarealer klima"),
                                            DT::DTOutput(ns("klima_layers_out"))),
                                     # column(6,
                                     #        h4("Påvirket areal"),
@@ -233,7 +254,6 @@ mod_matrikkel_screen_server <- function(id, in_files){
                 shinydashboard::box(title = "Detailjer naturrisiko",
                                     collapsible = TRUE, collapsed = T, width = 12, status = "primary",
                                     column(6,
-                                           h4("Aktsomhetsarealer natur"),
                                            DT::DTOutput(ns("nature_layers_out"))),
                                     column(6,
                                            h4("Påvirket arealdekke"),
@@ -259,12 +279,21 @@ mod_matrikkel_screen_server <- function(id, in_files){
                 attribution = "© Kartverket",
                 group = "Kartverket basiskart"
               )%>%
-              addPolygons(color = "green",fillColor = "green", weight = 3, smoothFactor = 0.5,
-                          opacity = 1.0, fillOpacity = 0.5)%>%
+              addPolygons(color = "green",fillColor = "green", weight = 0, smoothFactor = 0.5,
+                          opacity = 1.0, fillOpacity = 1)%>%
+              addPolygons(data = polygons ,color="red",  fillColor = "red", weight = 0, smoothFactor = 0.5,
+                          opacity = 1.0,fillOpacity = 0.8, label = ~ layer_id,  # Show layer_id in label
+                          highlightOptions = highlightOptions(weight = 1, color = "white", bringToFront = TRUE),
+                          group = "Klima-/naturrisiko område")%>%
+              addLegend(position = "topright",
+                        colors = c("green", "red"),
+                        labels = c("utenfor potensiell klima-/naturrisiko", "innenfor potensiell klima-/naturrisiko"),
+                        title = "",
+                        opacity = 1)%>%addScaleBar(position = "bottomleft")%>%
               addLayersControl(baseGroups = c("Kartverket basiskart","World image"),
-                               options = layersControlOptions(collapsed = FALSE))%>%
-              addPolygons(data = polygons , color = "red", fillColor = "red", weight = 3, smoothFactor = 0.5,
-                          opacity = 1.0, fillOpacity = )
+                               options = layersControlOptions(collapsed = FALSE),
+                               overlayGroups = c("Klima-/naturrisiko område"))
+
           }else{          base_map<-leaflet(parcels_sel) %>%
             addProviderTiles(providers$Esri.WorldImagery,options = tileOptions(minZoom = 8, maxZoom = 18),group = "World image")%>%
             addWMSTiles(
@@ -277,7 +306,14 @@ mod_matrikkel_screen_server <- function(id, in_files){
             addPolygons(color = "green",fillColor = "green", weight = 3, smoothFactor = 0.5,
                         opacity = 1.0, fillOpacity = 0.5)%>%
             addLayersControl(baseGroups = c("Kartverket basiskart","World image"),
-                             options = layersControlOptions(collapsed = FALSE))}
+                             options = layersControlOptions(collapsed = FALSE))%>%
+            addLegend(position = "topright",
+                      colors = c("green"),
+                      labels = c("utenfor potensiell klima-/naturrisiko"),
+                      title = "",
+                      opacity = 1)%>%addScaleBar(position = "bottomleft")
+
+          }
 
         })
 
@@ -285,20 +321,23 @@ mod_matrikkel_screen_server <- function(id, in_files){
         #E4-5_10
 
         tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
+        print(tot_proj_area_m2)
 
         ## climate vector for filtering nature and climate distances
-        klim_vec<-c("Flomsoner 200år klima","Kvikkleire risikoområde")
+        klim_vec<-c("Sone 200-årsflom klimaendring",
+                    "Kvikkleire risikoområde",
+                    "Sone 20-årsflom",
+                    "Sone 200-årsflom",
+                    "Sone 1000-årsflom",
+                    "Sone 100-årsskred",
+                    "Sone 1000-årsskred",
+                    "Flom aktsomhetsområder")
 
         #easy number to check number of intersections nature
         n_inter_nat<-nrow(distances%>%filter(min_dist_m == 0 & !valuable_areas %in% klim_vec))
 
         #and climate
         n_inter_klim<-nrow(distances%>%filter(min_dist_m == 0 & valuable_areas %in% klim_vec))
-
-        #names of val_nat which intersects to be displayed in KPI
-        KPI_nat<-as.vector(unlist(distances%>%filter(min_dist_m == 0 & !valuable_areas %in% klim_vec)%>%select(valuable_areas)))
-        KPI_klim<-as.vector(unlist(distances%>%filter(min_dist_m == 0 & valuable_areas %in% klim_vec)%>%select(valuable_areas)))
-        # print(KPI_klim)
 
         # m2 of parcel that is not bebygged/aggriculture E4.SBM-3_05(natural area loss)
         nat_loss_m2 <- sum(sapply(results, function(x) x$m2_nat_loss))
@@ -321,9 +360,9 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
           valueBox(
             value = paste0(round(nat_loss_m2,0), " m²"),  # Display the area value
-            subtitle = paste0(round(nat_loss_m2/tot_proj_area_m2,0)*100, " % av totalareal er naturareal"),
+            subtitle = paste0(round(nat_loss_m2/tot_proj_area_m2,4)*100, " % av totalareal er naturareal"),
             icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
-            color = "black",
+            color = "olive",
             width = 6
           )
         })
@@ -333,9 +372,9 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
           valueBox(
             value = paste0(round(klim_loss_m2,0), " m²"),  # Display the area value
-            subtitle = paste0(round(klim_loss_m2/tot_proj_area_m2,0)*100, " % av totalareal er klima relevant areal"),
+            subtitle = paste0(round(klim_loss_m2/tot_proj_area_m2,4)*100, " % av totalareal er klima relevant areal"),
             icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
-            color = "black",
+            color = "light-blue",
             width = 6
           )
         })
@@ -347,7 +386,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
             value = paste0(round(tot_proj_area_m2,0), " m²"),  # Display the area value
             subtitle = "Prosjektets total areal",
             icon = icon("map"),  # Choose an appropriate FontAwesome icon
-            color = "orange",
+            color = "black",
             width = 12
           )
         })
@@ -358,7 +397,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           if(n_inter_nat==0){
             valueBox(
               value = icon("check"),  # Display the area value
-              subtitle = "utenfor natur aktsomhetsområde",
+              subtitle = "utenfor område med potensiell naturrisiko",
               icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
               color = "olive",
               width = 12
@@ -367,11 +406,12 @@ mod_matrikkel_screen_server <- function(id, in_files){
           }else{
             valueBox(
               value = icon("xmark"),  # Display the area value
-              subtitle = "innenfor natur aktsomhetsområder",
+              subtitle = "innenfor område med potensiell naturrisiko",
               icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
               color = "red",
               width = 12
             )
+
           }
 
         })
@@ -382,7 +422,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           if(n_inter_klim==0){
             valueBox(
               value = icon("check"),  # Display the area value
-              subtitle = "utenfor klima aktsomhetsområder",
+              subtitle = "utenfor område med potensiell klimarisiko",
               icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
               color = "olive",
               width = 12
@@ -391,7 +431,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           }else{
             valueBox(
               value = icon("xmark"),  # Display the area value
-              subtitle = "innenfor klima aktsomhetsområder",
+              subtitle = "innenfor område med potensiell klimarisiko",
               icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
               color = "red",
               width = 12
@@ -404,15 +444,20 @@ mod_matrikkel_screen_server <- function(id, in_files){
         output$dynamic_btn<-renderUI({
           if(n_inter_nat==0 & n_inter_klim==0){
 
-              downloadButton(ns("save"),"Lagre og oppdater portefølje")
+              downloadButton(ns("save"),"Lagre aktsomhetsvudering og oppdater portefølje")
 
           }else if(n_inter_nat==0 & n_inter_klim!=0){
-            downloadButton(ns("save"),"Lagre og oppdater portefølje")
+            downloadButton(ns("save"),"Lagre aktsomhetsvudering og oppdater portefølje")
           }else{
             tagList(
-              #just for testing remove this
-              actionButton(ns("questions"),"Vis oppfølgingsspørsmål")
+              actionButton(ns("questions"),"Til oppfølgingsspørsål"),
+              h4(
+                icon("exclamation-circle", class = "text-danger fa-beat"),  # Add icon here
+                "Fyll ut oppfølgingsspørsål for å kunne lagre aktsomhetsvurdering",
+                style = "color: red;"
+              )
             )
+
 
           }
         })
@@ -420,43 +465,71 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
         output$cond_btn2<-renderUI({
           validate(
-            need(input$q1 !='',''),
-            need(input$q2 !='','')     )
+            need(input$E4.IRO1_04_c !='',''),
+            need(input$E4.IRO1_15 !='','')     )
           downloadButton(ns("save"),"Lagre og oppdater portefølje")
         })
 
         observeEvent(input$questions,{
           shinyalert::shinyalert(
-            title = "oppfølgingsspørsmål",
-            #type = "info",
+            title = "Oppfølgingsspørsmål",
             html = TRUE,
             text = tags$div(
               br(),
-              textInput(ns("q1"),"Hvordan har dere identifisert og vurdert overgangsrisikoer og fysiske risikoer knyttet til biologisk mangfold og økosystemer i virksomheten deres? "),
+              selectInput(ns("E4.IRO1_03"),"Har prosjekteier foretatt en Unngå-Flytte-Forbedre (UFF) vurdering av prosjektlokalisering og utforming?",c("","Ja","Nei"), selected = ""),
               br(),
-              textInput(ns("q2"),"Hvilke muligheter har dere funnet i forhold til biologisk mangfold og økosystemer i løpet av risikovurderingsprosessen? "),
+              selectInput(ns("E4.IRO1_04_a"),"Er prosjekteier informert om samlet tap av natur i kommunen de siste 5 årene?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_04_b"),"Er prosjekteier informert om kommunens mål for arealutvikling/arealreserve/ arealbudsjett?",c("","Ja","Nei"), selected = ""),
+              br(),
+              textInput(ns("E4.IRO1_04_c"),"Hvordan vurderer prosjekteier Eika.CAN prosjektets konsekvenser for naturverdier sett i forhold til kommunens historiske naturtap ?"),
+              br(),
+              selectInput(ns("E4.IRO1_05_a"),"Har prosjekteier vurdert prosjektlokalisering ift. arealplanens bestemmelser?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_05_b"),"Har prosjekteier fått planfaglige råd om prosjektlokalisering fra kommunen?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_05_c"),"Har prosjekteier informert naboer til eiendommen om prosjektplanen?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_06_a"),"Har prosjekteier vurdert konsekvenser for eiere og brukere av naboeiendommer av prosjektet?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_06_b"),"Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) med en konsekvensutredning av prosjektet?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_07"),"Har prosjekteier informert naboer av prosjektet om prosjektformål og -utforming?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_08_a"),"Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) prosjektet, spesielt ift. klimaregnskap?",c("","Ja","Nei"), selected = ""),
+              br(),
+              selectInput(ns("E4.IRO1_08_b"),"Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) prosjektet, spesielt ift. konsekvenser for overvannshåndtering, friluftslivs eller andre naturgoder?",c("","Ja","Nei"), selected = ""),
+              br(),
+              textInput(ns("E4.IRO1_15"),"Hvordan vil prosjekteier Unngå-Flytte-Forbedre (UFF) prosjektet ift. naturverdiene som er identifisert i aktsomhetsvurderingen?"),
               br(),
               uiOutput(ns("cond_btn2"))
             ),
             showConfirmButton = FALSE,
             closeOnEsc = F,
-            closeOnClickOutside = F,
+            closeOnClickOutside = T,
             showCancelButton = FALSE,
             animation = "slide-from-bottom",
-            size = "s"
+            size = "m"
           )
-
-
-
-
-
 
         })
 
         # report on all nature layers
         output$nature_layers_out<-DT::renderDT({
-          DT::datatable(distances%>%filter(!valuable_areas %in% klim_vec & !is.na(min_dist_m)))%>% DT::formatStyle(
-            'min_dist_m',
+          dt_nat<-distances%>%filter(!valuable_areas %in% klim_vec & !is.na(min_dist_m))%>%
+            mutate(
+              rel_area = as.integer(intersect_area_m2)/tot_proj_area_m2 ,
+              # Replace Inf with 0
+              rel_area = ifelse(is.infinite(rel_area), 0, rel_area),
+              # Round rel_area to integer
+              intersect_area_m2 = as.integer(intersect_area_m2),
+              rel_area = round(rel_area*100,2))
+          colnames(dt_nat)<-c("Område med potensiell klimarisiko","Kortest distanse [m]","Prosjektareal innenfor risikoareal [m²]","% av total prosjektareal")
+          DT::datatable(dt_nat,
+                        options = list(
+                          searching = FALSE  # Disable the search field
+                        ))%>% DT::formatStyle(
+            'Kortest distanse [m]',
             target = 'row',
             backgroundColor = styleEqual(0, "red")
           )
@@ -464,8 +537,22 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
         # report on all climate layers
         output$klima_layers_out<-DT::renderDT({
-          DT::datatable(distances%>%filter(valuable_areas %in% klim_vec))%>% DT::formatStyle(
-            'min_dist_m',
+          dt_clim<-distances%>%filter(valuable_areas %in% klim_vec & !is.na(min_dist_m))%>%
+            mutate(
+              rel_area = as.integer(intersect_area_m2)/tot_proj_area_m2 ,
+              # Replace Inf with 0
+              rel_area = ifelse(is.infinite(rel_area), 0, rel_area),
+              # Round rel_area to integer
+              intersect_area_m2 = as.integer(intersect_area_m2),
+              rel_area = round(rel_area*100,2))
+          colnames(dt_clim)<-c("Område med potensiell klimarisiko","Kortest distanse [m]","Prosjektareal innenfor risikoareal [m²]","% av total prosjektareal")
+
+
+          DT::datatable(dt_clim,
+                        options = list(
+                          searching = FALSE  # Disable the search field
+                        ))%>% DT::formatStyle(
+            'Kortest distanse [m]',
             target = 'row',
             backgroundColor = styleEqual(0, "red")
           )
@@ -483,7 +570,6 @@ mod_matrikkel_screen_server <- function(id, in_files){
               yaxis = list(title = "Areal (%)")
             )
         })
-        # save to duckDB for reporting
 
       }
 
@@ -562,7 +648,6 @@ mod_matrikkel_screen_server <- function(id, in_files){
           duckdb::dbDisconnect(con)  # Close connection
 
           write.csv(out_file, file, row.names = FALSE)  # Save DataFrame as CSV
-
         }
 
 

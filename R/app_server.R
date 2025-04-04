@@ -52,11 +52,11 @@ app_server <- function(input, output, session) {
           h4(HTML("<b>Velg kommune prosjektet befinner seg i</b>")),
           selectInput("kommune", "",
                       choices = c("Lillestrøm", "Verdal", "Åfjord")),
-          actionButton("confirm_btn","Til evaluering"),
+          actionButton("confirm_btn","Til aktsomhetsvurdering"),
           br(),
           br(),
-          h4("Snarvei - bare bruk den hvis klima- og naturrisiko er ikke relevant"),
-          actionButton("confirm_dir","Snarvei")
+          actionButton("confirm_dir","Til forenklet registrering"),
+          h4("Registrer en sak uten klima og naturrisiko")
 
       # footer = tagList(
       #   modalButton("Close"),
@@ -78,6 +78,7 @@ app_server <- function(input, output, session) {
     removeModal()
     output$shortcut<-renderUI(
       tagList(
+        h4("Vennligst oppgi følgende data.  Det brukes for å lage statistikk for andel av bankens portefølje som ikke -eksponert for klima- og naturrisiko."),
         textInput("eika_id","Saks nummer (kreditportalen)"),
         br(),
         selectInput(
@@ -130,7 +131,13 @@ app_server <- function(input, output, session) {
                     "red_listed_84.gpkg",
                     "teig_84.gpkg",
                     "kvikkleire_84.gpkg",
-                    "flomsone_200klima_84.gpkg")
+                    "flomsone_200klima_84.gpkg",
+                    "flom_20_84.gpkg",
+                    "flom_200_84.gpkg",
+                    "flom_1000_84.gpkg",
+                    "flom_aktsom_84.gpkg",
+                    "skred_100_84.gpkg",
+                    "skred_1000_84.gpkg")
 
     rast_files <- c("main_ecotypes_25833.tif", "myr_25833.tif", "natur_skog_25833.tif")
 
@@ -180,6 +187,7 @@ app_server <- function(input, output, session) {
     bbox <- sf::st_bbox(in_gpkg[[2]])
     shinybusy::remove_modal_spinner()
 
+    #combine raster and vector data in one list
     list(
       kom_dat = in_gpkg[[2]],
       vern = in_gpkg[[7]],
@@ -194,8 +202,14 @@ app_server <- function(input, output, session) {
       red_listed = in_gpkg[[8]],
       friluft = in_gpkg[[1]],
       kvikk = in_gpkg[[10]],
-      flom = in_gpkg[[1]],
-      nat_skog = in_rast[[3]]
+      flom_klima = in_gpkg[[11]],
+      nat_skog = in_rast[[3]],
+      flom_20 = in_gpkg[[12]],
+      flom_200 = in_gpkg[[13]],
+      flom_1000 = in_gpkg[[14]],
+      flom_akt = in_gpkg[[15]],
+      skred_100 = in_gpkg[[16]],
+      skred_1000 = in_gpkg[[17]]
     )
   })
 

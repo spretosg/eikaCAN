@@ -21,35 +21,41 @@ mod_data_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
     h2("Naturverdier"),
+    h3("På denne siden kan du lese mer om kriteriene eika.CAN bruker for å identifisere naturrisiko i en prosjektlokalitet."),
     br(),
     fluidRow(
-
              bslib::value_box(
                title = "",
                value = "",
-               h3("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av viktig natur». Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med kommunale, gjeldende byggeforskrifter."),
+               h3("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av viktig natur», basert på ",
+                  tags$a(href = "https://www.regjeringen.no/no/dokumenter/nasjonale-og-vesentlige-regionale-interesser-pa-miljoomradet--klargjoring-av-miljoforvaltningens-innsigelsespraksis/id2504971/?q=T-2/16", "nasjonale retningslinjer", target = "_blank"), ". Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med gjeldende kommunale planer og forskrifter."),
                theme = bslib::value_box_theme(bg = "white", fg = "black"),
-               showcase= bsicons::bs_icon("book"),
+               showcase= bsicons::bs_icon("book")
              )
     ),#/row1,
     br(),
     fluidRow(
-      column(6,
-             selectInput(
-               ns("layer_select"),
-               "Velg et kartlag for viktig natur",
-               choices = c(
-                 "",
-                 "Naturvernområder" = "nat_vern",
-                 "Myrområder" = "myr",
-                 "Villreinområder" = "rein",
-                 "Pressområder i strandsonen"="press_strand",
-                 "Inngrepsfri natur"="inon",
-                 "Vassdragsnatur"="water",
-                 "Utvalgte og truede naturtyper" = "nat_ku",
-                 "Friluftslivsområder" = "friluft",
-                 "Naturskog" = "forest"),
-               selected = ""
+      column(5,
+             tags$div(
+               selectInput(
+                 ns("layer_select"),
+                 "Velg et kartlag for viktig natur",
+                 choices = c(
+                   "",
+                   "Naturvernområder" = "nat_vern",
+                   "Myrområder" = "myr",
+                   "Villreinområder" = "rein",
+                   "Pressområder i strandsonen"="press_strand",
+                   "Inngrepsfri natur"="inon",
+                   "Vassdragsnatur"="water",
+                   "Utvalgte og truede naturtyper" = "nat_ku",
+                   "Friluftslivsområder" = "friluft",
+                   "Naturskog" = "forest"),
+                 selected = ""
+               ),
+               actionLink(ns("info_button"), label = NULL, icon = icon("info-circle"),
+                          style = "font-size: 20px; color: blue; margin-left: 10px;"),
+               style = "display: flex; align-items: center;"
              )
              ),
       column(6,
@@ -59,8 +65,7 @@ mod_data_ui <- function(id) {
     "))),
              imageOutput(ns("layer_image"), height = "auto"),
              br(),
-             textOutput(ns("layer_description_short"))),
-
+             textOutput(ns("layer_description_short")))
     ),
     br(),
     fluidRow(
@@ -76,14 +81,14 @@ mod_data_ui <- function(id) {
                                  textOutput(ns("layer_description_long")),
                                  collapsed = TRUE,
                                  width = 12),
-             shinydashboard::box(title = "Mer informasjon ",
+             shinydashboard::box(title = "Mer informasjon",
                                  status = "primary",
                                  solidHeader = TRUE,
                                  collapsible = TRUE,
                                  textOutput(ns("layer_mer")),
                                  collapsed = TRUE,
                                  width = 12)
-    )#/row2
+    )#/row3
 
 
   )
@@ -96,8 +101,14 @@ mod_data_server <- function(id, adm_unit, in_files){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-      output$title<-renderUI({
-      h2(paste0("Naturverdier i ", as.character(adm_unit)," kommune"))
+    observeEvent(input$info_button, {
+      showModal(modalDialog(
+        title = "Viktig natur",
+        "Omfattes følgende kartlagte områder: ",
+        h5("-Myr"),
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
     })
 
 
