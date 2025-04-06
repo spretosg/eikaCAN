@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>eika_can_vignette</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">eika_can_vignette</h1>
+
+
+
+<div id="background" class="section level1">
+<h1>Background</h1>
+<p>Facing climate change and nature loss, reflecting on the interlinked
+climate-nature crisis, calls actions in different economic sectors. To
+enhance corporate transparency, investor confidence and finally more
+sustainable practices across different sectors, the European
+Sustainability Reporting Standards (ESRS) under the Corporate
+Sustainability Reporting Directive (CSRD) have been established. The
+standard requires estimation and reporting regarding the companies
+effect on environment and society.</p>
+<p>The following application (CAN tool), at the proof of concept (POC)
+stage, facilitates reporting and tracking impacts of building activities
+on climate and nature. Thus, climate effects (E1) and natue effects (E4)
+of the ESRS are partially covered with the tool.</p>
+<div id="novelty" class="section level2">
+<h2>Novelty</h2>
+<p>The tool uses spatial explicit data of the area of building activity
+(plot or region of impact) and locally valid climate and nature data.
+Consequently, the reporting of climate and nature impact summarizes
+project-based impact estimates.</p>
+</div>
+<div id="goals" class="section level2">
+<h2>Goals</h2>
+<ul>
+<li>Screen projects for potential high risk exposure/vulnerabilities
+regarding climate change</li>
+<li>Screen projects for potential negative impacts on valuable
+nature</li>
+<li>Facilitate reporting of a whole project portfolio</li>
+</ul>
+</div>
+</div>
+<div id="data" class="section level1">
+<h1>Data</h1>
+<p>To calculate potential risk exposure of climate change and impacts on
+valuable nature of specific projects, local valid and high resolution
+data layers are used:</p>
+<div id="general-data" class="section level2">
+<h2>General data</h2>
+<p>This data includes information about the target municipalities and
+the plots to locate projects</p>
+<table>
+<colgroup>
+<col width="16%" />
+<col width="14%" />
+<col width="63%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Data</th>
+<th align="left">Data_owner</th>
+<th align="left">Source</th>
+<th align="left">Version</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Matrikkelen - Eiendomskart Teig</td>
+<td align="left">Norwegian Mapping Authority</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/matrikkelen-eiendomskart-teig/74340c24-1c8a-4454-b813-bfe498e80f16" class="uri">https://kartkatalog.geonorge.no/metadata/matrikkelen-eiendomskart-teig/74340c24-1c8a-4454-b813-bfe498e80f16</a></td>
+<td align="left">31.03.2025</td>
+</tr>
+<tr class="even">
+<td align="left">Administrative enheter kommuner</td>
+<td align="left">Norwegian Mapping Authority</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/administrative-enheter-kommuner/041f1e6e-bdbc-4091-b48f-8a5990f3cc5b?search=kommun" class="uri">https://kartkatalog.geonorge.no/metadata/administrative-enheter-kommuner/041f1e6e-bdbc-4091-b48f-8a5990f3cc5b?search=kommun</a></td>
+<td align="left">31.03.2025</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="climate" class="section level2">
+<h2>Climate</h2>
+<table>
+<colgroup>
+<col width="6%" />
+<col width="28%" />
+<col width="59%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Data</th>
+<th align="left">Data_owner</th>
+<th align="left">Source</th>
+<th align="left">Version</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Flomsoner</td>
+<td align="left">Norwegian Water Resources and Energy Directorate</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/flomsoner/e95008fc-0945-4d66-8bc9-e50ab3f50401?search=flomson" class="uri">https://kartkatalog.geonorge.no/metadata/flomsoner/e95008fc-0945-4d66-8bc9-e50ab3f50401?search=flomson</a></td>
+<td align="left">28.3.2025</td>
+</tr>
+<tr class="even">
+<td align="left">Kvikkleire</td>
+<td align="left">Norwegian Water Resources and Energy Directorate</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/kvikkleire/a29b905c-6aaa-4283-ae2c-d167624c08a8?search=kvikk" class="uri">https://kartkatalog.geonorge.no/metadata/kvikkleire/a29b905c-6aaa-4283-ae2c-d167624c08a8?search=kvikk</a></td>
+<td align="left">28.3.2025</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="nature" class="section level2">
+<h2>Nature</h2>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="16%" />
+<col width="54%" />
+<col width="3%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Data</th>
+<th align="left">Data_owner</th>
+<th align="left">Source</th>
+<th align="left">Version</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Naturvernområder</td>
+<td align="left">Norwegian Environment Agency</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/naturvernomraader/5857ec0a-8d2c-4cd8-baa2-0dc54ae213b4" class="uri">https://kartkatalog.geonorge.no/metadata/naturvernomraader/5857ec0a-8d2c-4cd8-baa2-0dc54ae213b4</a></td>
+<td align="left">01.01.2021</td>
+</tr>
+<tr class="even">
+<td align="left">Friluftslivsområder - kartlagte</td>
+<td align="left">Norwegian Environment Agency</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/friluftslivsomraader-kartlagte/91e31bb7-356f-4478-bcba-d5c2de6e91bc?search=kartlag" class="uri">https://kartkatalog.geonorge.no/metadata/friluftslivsomraader-kartlagte/91e31bb7-356f-4478-bcba-d5c2de6e91bc?search=kartlag</a></td>
+<td align="left">01.01.2021</td>
+</tr>
+<tr class="odd">
+<td align="left">Inngrepsfri natur i Norge</td>
+<td align="left">Norwegian Environment Agency</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/inngrepsfri-natur-i-norge/277bda73-b924-4a0e-b299-ea5441de2d3b?search=inngr" class="uri">https://kartkatalog.geonorge.no/metadata/inngrepsfri-natur-i-norge/277bda73-b924-4a0e-b299-ea5441de2d3b?search=inngr</a></td>
+<td align="left">01.01.2023</td>
+</tr>
+<tr class="even">
+<td align="left">Villreinområder</td>
+<td align="left">Norwegian Environment Agency</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/villreinomraader/fc59e9a4-59df-4eb3-978a-1c173b84bf4e?search=villrei" class="uri">https://kartkatalog.geonorge.no/metadata/villreinomraader/fc59e9a4-59df-4eb3-978a-1c173b84bf4e?search=villrei</a></td>
+<td align="left">01.01.2021</td>
+</tr>
+<tr class="odd">
+<td align="left">Naturtyper - verdsatte</td>
+<td align="left">Norwegian Environment Agency</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/naturtyper-ku-verdi-wms/aea3702c-3072-4a00-88bc-07cc3992b5a4?search=ku%20natur" class="uri">https://kartkatalog.geonorge.no/metadata/naturtyper-ku-verdi-wms/aea3702c-3072-4a00-88bc-07cc3992b5a4?search=ku%20natur</a></td>
+<td align="left">21.04.2022</td>
+</tr>
+<tr class="even">
+<td align="left">Statlige planretningslinjer for differensiert
+forvaltning av strandsonen langs sjøen</td>
+<td align="left">Ministry of Local Government and Regional
+Development</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/statlige-planretningslinjer-for-differensiert-forvaltning-av-strandsonen-langs-sjoeen/f50f228a-9482-4821-97df-41166c1f5a9b?search=strands" class="uri">https://kartkatalog.geonorge.no/metadata/statlige-planretningslinjer-for-differensiert-forvaltning-av-strandsonen-langs-sjoeen/f50f228a-9482-4821-97df-41166c1f5a9b?search=strands</a></td>
+<td align="left">11.03.2025</td>
+</tr>
+<tr class="odd">
+<td align="left">Hovedøkosystemer i Norge</td>
+<td align="left">Norwegian Environment Agency</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/hovedoekosystemer-i-norge-versjon-1/ce4261f9-486d-4f28-8687-d6d0f277f667?search=%C3%B8kos" class="uri">https://kartkatalog.geonorge.no/metadata/hovedoekosystemer-i-norge-versjon-1/ce4261f9-486d-4f28-8687-d6d0f277f667?search=%C3%B8kos</a></td>
+<td align="left">14.12.2023</td>
+</tr>
+<tr class="even">
+<td align="left">Naturskog</td>
+<td align="left">Norwegian Environment Agency</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/naturskog-v1/a0062ac4-8ee0-408f-9373-4c8b8c3088d8?search=natursko" class="uri">https://kartkatalog.geonorge.no/metadata/naturskog-v1/a0062ac4-8ee0-408f-9373-4c8b8c3088d8?search=natursko</a></td>
+<td align="left">10.01.2025</td>
+</tr>
+<tr class="odd">
+<td align="left">Myr</td>
+<td align="left">Norwegian Institute for Nature Research</td>
+<td align="left">no online resource</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">Vassdragsnatur</td>
+<td align="left">Norwegian Institute for Nature Research</td>
+<td align="left">no online resource</td>
+<td align="left">01.01.2025</td>
+</tr>
+<tr class="odd">
+<td align="left">Rødlistearter</td>
+<td align="left">Artsdatabanken</td>
+<td align="left"><a href="https://kartkatalog.geonorge.no/metadata/roedlistearter/00b0ab63-de0b-4f12-ac40-655de5163b8d?search=r%C3%B8d" class="uri">https://kartkatalog.geonorge.no/metadata/roedlistearter/00b0ab63-de0b-4f12-ac40-655de5163b8d?search=r%C3%B8d</a></td>
+<td align="left">16.03.2025</td>
+</tr>
+</tbody>
+</table>
+<p>The data was partitioned by municipality</p>
+</div>
+</div>
+<div id="calculations" class="section level1">
+<h1>Calculations</h1>
+<p>The calculations of climate and nature risk follows a three step
+approach:</p>
+<ol style="list-style-type: decimal">
+<li><p>Selection of a municipality Load the local data and visualize the
+data through WMS layers</p></li>
+<li><p>Select a plot from the “teig” data using brusknummer, gårdsnummer
+and teignummer</p></li>
+</ol>
+<ul>
+<li>Load the plot geometry</li>
+<li>Calculate min distance of the plot to each data layer (climate &amp;
+nature)</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>distance <span class="ot">&lt;-</span> <span class="fu">st_distance</span>(plot_geom, layers[[i]]) <span class="sc">%&gt;%</span> <span class="fu">min</span>()  <span class="co"># Closest distance</span></span></code></pre></div>
+<ul>
+<li>if min dist == 0 calculate intersection polygon and intersection
+polygon area</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a> <span class="cf">if</span>(<span class="fu">as.numeric</span>(distance) <span class="sc">==</span> <span class="dv">0</span>){</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>        <span class="co"># Compute intersection AREA</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>        intersection <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>        intersect_poly<span class="ot">&lt;-</span><span class="fu">st_intersection</span>(geom, layers[[i]])<span class="sc">%&gt;%</span><span class="fu">select</span>()<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">layer_id =</span> <span class="fu">names</span>(layers[i])) <span class="co">#geometry</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>        intersection_area <span class="ot">&lt;-</span> <span class="fu">st_area</span>(intersect_poly) <span class="co">#area</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>      }<span class="cf">else</span>{</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>        intersection <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>        intersect_poly<span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>        intersection_area <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>      }</span></code></pre></div>
+<ul>
+<li>Calculate area per land-use/land-cover (raster) class within the
+plot</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>overlap_stats <span class="ot">&lt;-</span> exactextractr<span class="sc">::</span><span class="fu">exact_extract</span>(raster, plot_geom)</span></code></pre></div>
+<ol start="3" style="list-style-type: decimal">
+<li>Display results</li>
+</ol>
+</div>
+<div id="outputs" class="section level1">
+<h1>Outputs</h1>
+<p>The outputs show red and green “flags” according to intersection and
+non-intersection of the project area with one or several climate or
+nature layers. For each layer the intersection, intersection area and
+areas per land-cover/land-use class can be saved as CSV. In addition the
+results for each plot are saved on a DUCK data base (duckdb)</p>
+<div id="covered-esrs-data-points" class="section level2">
+<h2>Covered ESRS data points</h2>
+<p>The tools covers the following data points from the ESRS reporting
+standard on numerical, spatially explicit basis.</p>
+<table>
+<colgroup>
+<col width="5%" />
+<col width="48%" />
+<col width="32%" />
+<col width="14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">ID</th>
+<th align="left">Description</th>
+<th align="left">Data_used</th>
+<th align="left">Calculations_used</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">E1.IRO-1_02</td>
+<td align="left">Description of process in relation to climate-related
+physical risks in own operations and along value chain</td>
+<td align="left">Temperature and flood data</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">E1.IRO-1_04</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">E4.SBM-3_01</td>
+<td align="left">Localisation of a financing project</td>
+<td align="left">Municipal and plot geometries</td>
+<td align="left">Selection</td>
+</tr>
+<tr class="even">
+<td align="left">E4.SBM-3_02</td>
+<td align="left">Type definition of a financing project</td>
+<td align="left">User input</td>
+<td align="left">Selection</td>
+</tr>
+<tr class="odd">
+<td align="left">E4.SBM-3_03</td>
+<td align="left">Due diligence of projects nature risk</td>
+<td align="left">Valuable nature data</td>
+<td align="left">Distance, intersection and area</td>
+</tr>
+<tr class="even">
+<td align="left">E4.SBM-3_04</td>
+<td align="left">Loss of valuable natural areas</td>
+<td align="left">Valuable nature data</td>
+<td align="left">Distance, intersection and area</td>
+</tr>
+<tr class="odd">
+<td align="left">E4.SBM-3_05</td>
+<td align="left">Conversion of natural surfaces into sealed
+surfaces</td>
+<td align="left">Valuable nature data</td>
+<td align="left">Distance, intersection and area</td>
+</tr>
+<tr class="even">
+<td align="left">E4.SBM-3_06</td>
+<td align="left">Potential negative impact on red-listed species /
+valuable nature areas</td>
+<td align="left">Land-use / land cover data</td>
+<td align="left">Intersection</td>
+</tr>
+<tr class="odd">
+<td align="left">E4.IRO-1_14</td>
+<td align="left">The project is within valuable nature areas</td>
+<td align="left">Potential negative impact on red-listed species /
+valuable nature areas</td>
+<td align="left">Distance, intersection and area</td>
+</tr>
+<tr class="even">
+<td align="left">E4-5_01</td>
+<td align="left">Distance to nature protected areas and valuable nature
+areas</td>
+<td align="left">Nature protected areas</td>
+<td align="left">Distance, intersection and area</td>
+</tr>
+<tr class="odd">
+<td align="left">E4-5_02</td>
+<td align="left">Project area that lies within nature protected or
+valuable nature areas</td>
+<td align="left">Nature protected areas</td>
+<td align="left">Distance, intersection and area</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
