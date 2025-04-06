@@ -20,7 +20,7 @@
 mod_data_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
-    h2("Naturverdier"),
+    h1("Naturverdier"),
     h3("På denne siden kan du lese mer om kriteriene eika.CAN bruker for å identifisere naturrisiko i en prosjektlokalitet."),
     br(),
     fluidRow(
@@ -29,17 +29,22 @@ mod_data_ui <- function(id) {
                value = "",
                h3("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av viktig natur», basert på ",
                   tags$a(href = "https://www.regjeringen.no/no/dokumenter/nasjonale-og-vesentlige-regionale-interesser-pa-miljoomradet--klargjoring-av-miljoforvaltningens-innsigelsespraksis/id2504971/?q=T-2/16", "nasjonale retningslinjer", target = "_blank"), ". Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med gjeldende kommunale planer og forskrifter."),
-               theme = bslib::value_box_theme(bg = "white", fg = "black"),
+               theme = bslib::value_box_theme(bg = "#D3D3D3", fg = "black"),
                showcase= bsicons::bs_icon("book")
              )
     ),#/row1,
     br(),
     fluidRow(
       column(5,
+
              tags$div(
                selectInput(
                  ns("layer_select"),
-                 "Velg et kartlag for viktig natur",
+                 h4(
+                   icon("leaf", class = "fa-beat", style = "color: #78BE20;"),  # Add icon here
+                   "Velg et kartlag for viktig natur ",
+                   style = "color: black;"
+                 ),
                  choices = c(
                    "",
                    "Naturvernområder" = "nat_vern",
@@ -54,7 +59,7 @@ mod_data_ui <- function(id) {
                  selected = ""
                ),
                actionLink(ns("info_button"), label = NULL, icon = icon("info-circle"),
-                          style = "font-size: 20px; color: blue; margin-left: 10px;"),
+                          style = "font-size: 20px; color:  #78BE20; margin-left: 10px;"),
                style = "display: flex; align-items: center;"
              )
              ),

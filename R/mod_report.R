@@ -10,7 +10,16 @@
 mod_report_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h2("Oversikt portefølje"),
+    h1("Oversikt portefølje"),
+    fluidRow(
+      bslib::value_box(
+        title = "",
+        value = "",
+        h4("Statistikk og oversikt over alle prosjekter og hele portefølje"),
+        theme = bslib::value_box_theme(bg = "#D3D3D3", fg = "black"),
+        showcase= bsicons::bs_icon("book")
+      )
+    ),
     br(),
     fluidRow(
       column(3, shinydashboard::valueBoxOutput(ns("n_proj"))),

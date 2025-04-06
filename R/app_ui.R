@@ -23,10 +23,21 @@ app_ui <- function(request) {
       }
     "))
       ),
-      titlePanel(title = div(img(src="www/eika_logo.PNG", width ='120'), ".CAN - klima & naturrisiko"),windowTitle = "eika.CAN"),
+      div(
+        style = "background-color: white; padding: 15px 20px; border-bottom: 1px solid #ddd;",
+        titlePanel(
+          title = div(
+            img(src = "www/eika_logo.PNG", width = "120", style = "margin-right: 10px; vertical-align: middle;"),
+            span("CAN - klima & naturrisiko", style = "vertical-align: middle; font-size: 26px; font-weight: bold; color: #1E3A5F;")
+          ),
+          windowTitle = "eika.CAN"
+        )
+      ),
+
       useShinyjs(),
       div(id = "app-content",
           dashboardPage(
+            skin = "black",
             dashboardHeader(
               tags$li(class = "dropdown",
                       style = "display: flex; gap: 15px; align-items: center; padding-right: 15px;",
@@ -140,6 +151,7 @@ golem_add_external_resources <- function() {
 
   tags$head(
     favicon(),
+    tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "eikaCAN"

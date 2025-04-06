@@ -24,40 +24,52 @@ mod_matrikkel_screen_ui <- function(id) {
   ns <- NS(id)
   # tagList(
     fluidPage(
-      h2("Klima og naturrisiko - Aktsomhetsvurdering av prosjekt"),
+      h1("Klima og naturrisiko - Aktsomhetsvurdering av prosjekt"),
       br(),
       fluidRow(
-        column(5,
-               textInput(ns("eika_id"),"Saks nummer (kreditportalen)"),
-               br(),
-               selectInput(
-                 ns("proj_type"),
-                 "Velg prosjekttype",
-                 choices = c("", "Bolig" = "house", "Næring" = "industry","Landbruk"="agri"),
-                 selected = ""
-               ),
-               numericInput(ns("bruks_nr"),"Bruksnummer",NA, min = 1, step = 1),
-               br(),
-               numericInput(ns("gards_nr"),"Gårdsnummer",NA, min = 1, step = 1),
-               br(),
-               tags$div(
-                 numericInput(ns("teig_nr"),"Teignummer",NULL, min = 1, step = 1),
-                 actionLink(ns("info_teig"), label = NULL, icon = icon("info-circle"),
-                            style = "font-size: 20px; color: blue; margin-left: 10px;"),
-                 style = "display: flex; align-items: center;"
-               ),
-               uiOutput(ns("cond_btn"))),
-        column(7,
-               bslib::value_box(
+
+             bslib::value_box(
                  title = "",
                  value = "",
                  h3("Med bruks- og gårdsnummer bestemmer matrikkelenehet og lokaliseres prosjektområdet. Deretter bergegnes klima- og naturrisiko eksplisitt for ditt prosjekt. Til slutt kan du lagre statistikk til rapporterings data base og csv filer."),
-                 theme = bslib::value_box_theme(bg = "white", fg = "black"),
-                 showcase= bsicons::bs_icon("book"),
                  br(),
+                 div(
+                   style = "font-size: 22px; padding: 10px;",
+                   textInput(ns("eika_id"), "Prosjektnummer (Kreditportalen)")
+                 ),
+                 br(),
+                 div(
+                   style = "font-size: 20px; padding: 10px;",
+                   selectInput(
+                     ns("proj_type"),
+                     "Velg prosjekttype",
+                     choices = c("", "Bolig" = "house", "Næring" = "industry","Landbruk"="agri"),
+                     selected = ""
+                   )
+                 ),
+                 br(),
+                 div(
+                   style = "font-size: 20px; padding: 10px;",
+                   numericInput(ns("bruks_nr"), "Bruksnummer", NA, min = 1, step = 1)
+                 ),
+                 br(),
+                 div(
+                   style = "font-size: 20px; padding: 10px;",
+                   numericInput(ns("gards_nr"),"Gårdsnummer",NA, min = 1, step = 1)
+                 ),
+                 br(),
+                 tags$div(
+                   style = "font-size: 20px; padding: 10px;",
+                   numericInput(ns("teig_nr"),"Teignummer",NULL, min = 1, step = 1),
+                   actionLink(ns("info_teig"), label = NULL, icon = icon("info-circle"),
+                              style = "font-size: 20px; color:  #78BE20; margin-left: 10px;"),
+                   style = "display: flex; align-items: center;"
+                 ),
+                 uiOutput(ns("cond_btn")),
+                 theme = bslib::value_box_theme(bg = "#D3D3D3", fg = "black"),
+                 showcase= bsicons::bs_icon("book"),
+               )
 
-               )
-               )
       ),
       br(),
       uiOutput(ns("dashboard"))
