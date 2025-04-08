@@ -35,7 +35,7 @@ mod_matrikkel_screen_ui <- function(id) {
                  br(),
                  div(
                    style = "font-size: 22px; padding: 10px;",
-                   textInput(ns("eika_id"), "Prosjektnummer (Kreditportalen)")
+                   textInput(ns("eika_id"), "Saksnummer")
                  ),
                  br(),
                  div(
@@ -50,12 +50,12 @@ mod_matrikkel_screen_ui <- function(id) {
                  br(),
                  div(
                    style = "font-size: 20px; padding: 10px;",
-                   numericInput(ns("bruks_nr"), "Bruksnummer", NA, min = 1, step = 1)
+                   numericInput(ns("gards_nr"),"Gårdsnummer",NA, min = 1, step = 1)
                  ),
                  br(),
                  div(
                    style = "font-size: 20px; padding: 10px;",
-                   numericInput(ns("gards_nr"),"Gårdsnummer",NA, min = 1, step = 1)
+                   numericInput(ns("bruks_nr"), "Bruksnummer", NA, min = 1, step = 1)
                  ),
                  br(),
                  tags$div(
@@ -234,6 +234,17 @@ mod_matrikkel_screen_server <- function(id, in_files){
                 h4("I rød ser man arealer av prosjektområder som er innenfor klima eller naturaktsomhetsområder."),
                 br(),
                 leafletOutput(ns("map_parcel")),
+                bslib::value_box(
+                  title = NULL,
+                  value = NULL,
+                  h4("Vær oppmerksom på at kartdataene som ligger til grunn for beregningen av klima- og naturrisiko, er de beste tilgjengelige dataene, men at de kan inneholde feil eller unøyaktigheter. Det er derfor viktig å sammenligne resultatene med lokale kilder og rapportere dette om nødvendig."),
+                  theme = bslib::value_box_theme(
+                    bg = "#F08080",       # Light grey background
+                    fg = "black"
+                  ),
+                  showcase = bsicons::bs_icon("exclamation-triangle") # Exclamation icon
+                )
+
               ),
               # main KPI of both
               fluidRow(column(6,
@@ -373,7 +384,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           valueBox(
             value = paste0(round(nat_loss_m2,0), " m²"),  # Display the area value
             subtitle = paste0(round(nat_loss_m2/tot_proj_area_m2,4)*100, " % av totalareal er naturareal"),
-            icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
+            #icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
             color = "olive",
             width = 6
           )
@@ -385,7 +396,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           valueBox(
             value = paste0(round(klim_loss_m2,0), " m²"),  # Display the area value
             subtitle = paste0(round(klim_loss_m2/tot_proj_area_m2,4)*100, " % av totalareal er klima relevant areal"),
-            icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
+            #icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
             color = "light-blue",
             width = 6
           )
@@ -397,7 +408,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
           valueBox(
             value = paste0(round(tot_proj_area_m2,0), " m²"),  # Display the area value
             subtitle = "Prosjektets total areal",
-            icon = icon("map"),  # Choose an appropriate FontAwesome icon
+            #icon = icon("map"),  # Choose an appropriate FontAwesome icon
             color = "black",
             width = 12
           )
@@ -419,7 +430,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
             valueBox(
               value = icon("xmark"),  # Display the area value
               subtitle = "innenfor område med potensiell naturrisiko",
-              icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
+              #icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
               color = "red",
               width = 12
             )
@@ -435,7 +446,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
             valueBox(
               value = icon("check"),  # Display the area value
               subtitle = "utenfor område med potensiell klimarisiko",
-              icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
+              #icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
               color = "olive",
               width = 12
             )
@@ -444,7 +455,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
             valueBox(
               value = icon("xmark"),  # Display the area value
               subtitle = "innenfor område med potensiell klimarisiko",
-              icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
+              #icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
               color = "red",
               width = 12
             )
