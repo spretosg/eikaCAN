@@ -237,7 +237,8 @@ mod_matrikkel_screen_server <- function(id, in_files){
                 bslib::value_box(
                   title = NULL,
                   value = NULL,
-                  h4("Vær oppmerksom på at kartdataene som ligger til grunn for beregningen av klima- og naturrisiko, er de beste tilgjengelige dataene, men at de kan inneholde feil eller unøyaktigheter. Det er derfor viktig å sammenligne resultatene med lokale kilder og rapportere dette om nødvendig."),
+                  h4("Vær oppmerksom på at kartdataene som ligger til grunn for beregningen av klima- og naturrisiko, er de beste tilgjengelige dataene i Norge, men at de kan inneholde feil eller unøyaktigheter. Som en del av aktsomhetsvudering er det derfor viktig å vøre bevisst på dette, sammenligne resultatene med lokale kilder og rapportere dette nedover om nødvendig."),
+                  h5("En slik rapportering kan gjøres nederst på siden."),
                   theme = bslib::value_box_theme(
                     bg = "#F08080",       # Light grey background
                     fg = "black"
@@ -282,7 +283,22 @@ mod_matrikkel_screen_server <- function(id, in_files){
                                            h4("Påvirket arealdekke"),
                                            plotly::plotlyOutput(ns("area_stats")))
                 )#collapsible details nature
-              )
+              ),
+              br(),
+              fluidRow(
+                bslib::value_box(
+                  title = NULL,
+                  value = NULL,
+                  div(
+                    style = "font-size: 20px; padding: 10px;",
+                  textInput(ns("report_data_layer"),label = "Hvis behov, beskriv kort usikkerheten eller feilen som oppstår i ett eller flere datasett, og som fører til potensielt feilaktige risikoberegninger.")),
+                  theme = bslib::value_box_theme(
+                    bg = "white",       # Light grey background
+                    fg = "black"
+                  ),
+                  showcase = bsicons::bs_icon("pencil-square") # Exclamation icon
+                ),
+              ),
             )
           ))
 
