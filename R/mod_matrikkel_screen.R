@@ -196,6 +196,24 @@ mod_matrikkel_screen_server <- function(id, in_files){
       return(inter_poly)
     })
 
+
+    layer_ids<-eventReactive(input$confirm,{
+      req(results())
+      results<-results()
+      req(distances())
+      distances<-distances()
+      distances$min_dist_m<-as.integer(distances$min_dist_m)
+
+      if(max(distances$min_dist_m,na.rm = T)>0 & !is.null(distances)){
+        layer_ids <- do.call(rbind, lapply(results, function(x) x$layers_id))
+        layer_ids <- as.vector(unique(layer_ids))
+
+      }else{
+        layer_ids<-NULL
+      }
+      return(layer_ids)
+    })
+
     ## the UI and the plots
     observeEvent(input$confirm,{
       req(parcels_sel())
@@ -222,6 +240,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
       }else{
         distances<-distances()
         polygons<-polygons()
+        layer_ids<-layer_ids()
         distances$min_dist_m<-as.integer(distances$min_dist_m)
         distances$intersect_area_m2<-as.integer(distances$intersect_area_m2)
         results<-results()
@@ -303,11 +322,23 @@ mod_matrikkel_screen_server <- function(id, in_files){
           ))
 
         #base map
+        ## add the layers that are intersecting to the map
+        #print(layer_ids)
+        exclude_names <-c("kom_dat","parcel")
+        sub_in_files<-in_files[layer_ids]
+        sub_in_files <- sub_in_files[setdiff(names(sub_in_files), exclude_names)]
+        #print(names(sub_in_files))
+        # Get centroid (returns POINT geometry)
+        center <- st_centroid(st_union(parcels_sel))  # st_union ensures single geometry
 
+        # Extract coordinates
+        center_coords <- st_coordinates(center)
 
         ## the map ev, some wms layers?
         output$map_parcel <- renderLeaflet({
           if(!is.null(polygons)){
+
+
             polygons<-st_transform(polygons,st_crs(parcels_sel))
             base_map<-leaflet(parcels_sel) %>%
               addProviderTiles(providers$Esri.WorldImagery,options = tileOptions(minZoom = 8, maxZoom = 18),group = "World image")%>%
@@ -317,21 +348,57 @@ mod_matrikkel_screen_server <- function(id, in_files){
                 options = WMSTileOptions(format = "image/png", transparent = TRUE),
                 attribution = "© Kartverket",
                 group = "Kartverket basiskart"
-              )%>%
-              addPolygons(color = "green",fillColor = "green", weight = 0, smoothFactor = 0.5,
-                          opacity = 1.0, fillOpacity = 1)%>%
+              )
+
+            # Initialize a vector to collect group names
+            overlay_groups <- c("Klima-/naturrisiko område")
+
+            for(i in seq_along(sub_in_files)){
+              layer <- sub_in_files[[i]]
+              layer_id <- names(sub_in_files[i])
+
+              # Append to overlay group vector
+              overlay_groups <- c(overlay_groups, layer_id)
+
+              if (inherits(layer, "sf")) {
+                base_map <- base_map %>%
+                  addPolygons(data = layer,
+                              group = layer_id,
+                              fillColor = "blue",
+                              weight = 1,
+                              opacity = 1,
+                              color = 'white',
+                              fillOpacity = 0.5)
+              } else if (inherits(layer, "SpatRaster")) {
+                base_map <- base_map %>%
+                  addRasterImage(layer,
+                                 group = layer_id,
+                                 opacity = 0.7,
+                                 project = TRUE)
+              }
+
+            }
+            base_map <- base_map %>%
+              addPolygons(color = "orange",fillColor = "green", weight = 3, smoothFactor = 0.5,
+                          opacity = 1.0, fillOpacity = 0)%>%
               addPolygons(data = polygons ,color="red",  fillColor = "red", weight = 0, smoothFactor = 0.5,
                           opacity = 1.0,fillOpacity = 0.8, label = ~ layer_id,  # Show layer_id in label
                           highlightOptions = highlightOptions(weight = 1, color = "white", bringToFront = TRUE),
                           group = "Klima-/naturrisiko område")%>%
               addLegend(position = "topright",
-                        colors = c("green", "red"),
-                        labels = c("utenfor potensiell klima-/naturrisiko", "innenfor potensiell klima-/naturrisiko"),
+                        colors = c( "red"),
+                        labels = c("innenfor potensiell klima-/naturrisiko"),
                         title = "",
-                        opacity = 1)%>%addScaleBar(position = "bottomleft")%>%
-              addLayersControl(baseGroups = c("Kartverket basiskart","World image"),
-                               options = layersControlOptions(collapsed = FALSE),
-                               overlayGroups = c("Klima-/naturrisiko område"))
+                        opacity = 1)%>%
+              addScaleBar(position = "bottomleft")%>%
+              addLayersControl(
+                baseGroups = c("Kartverket basiskart", "World image"),
+                overlayGroups = overlay_groups,
+                options = layersControlOptions(collapsed = FALSE)
+              )%>%
+              hideGroup(setdiff(overlay_groups, "Klima-/naturrisiko område"))%>%
+              setView(lng = center_coords[1], lat = center_coords[2], zoom = 14)
+
 
           }else{          base_map<-leaflet(parcels_sel) %>%
             addProviderTiles(providers$Esri.WorldImagery,options = tileOptions(minZoom = 8, maxZoom = 18),group = "World image")%>%

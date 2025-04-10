@@ -24,6 +24,28 @@ return_inters_poly<-function(geom,layers){
   })
 
 
+  polys <- polys[!sapply(polys, is.null)]
+  # Combine all valid sf objects into one
+  polys_sf <- do.call(rbind, polys)
+
+  return(polys_sf)
+}
+
+
+
+return_inters_layer_id<-function(geom,layers){
+  polys <- lapply(seq_along(layers), function(i) {
+    intersect_poly <- tryCatch({
+      st_intersection(geom, layers[[i]])
+    }, error = function(e) NULL)  # Catch errors and return NULL instead of breaking
+
+    if (is.null(intersect_poly) || nrow(intersect_poly) == 0) {
+      return(NULL)
+    } else {
+      layer_id<-names(layers[i])
+    }
+  })
+
 
   polys <- polys[!sapply(polys, is.null)]
   # Combine all valid sf objects into one
@@ -31,6 +53,8 @@ return_inters_poly<-function(geom,layers){
 
   return(polys_sf)
 }
+
+
 ## small function for distance and intersection calc
 # Function to calculate intersection and distance between shapes
 calc_min_distance <- function(geom, layers) {
@@ -163,6 +187,10 @@ calc_spat_stats <- function(drawn_sf, in_files) {
     ##polys
     polygons_inter <-return_inters_poly(single_polygon, vern_list)
 
+    #layer ids of inters layers
+    layers_id<-return_inters_layer_id(single_polygon, in_files)
+    #print(layers_id)
+
     # Extract closest distance E4-5_01 & KLIMA E1
     df<-cbind(vern_vector,
               #dist
@@ -219,6 +247,7 @@ calc_spat_stats <- function(drawn_sf, in_files) {
       project_area_m2 = as.numeric(proj_area),
       distances_intersection = df,
       polygon_geom_df = polygons_inter,
+      layers_id = layers_id,
       m2_nat_loss = sum_natureloss,
       lulc_stats = lulc_summary,
       myr_stats = myr_summary,
