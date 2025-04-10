@@ -221,6 +221,6 @@ app_server <- function(input, output, session) {
     mod_data_klima_server("data_klim", adm_name, in_files)
     mod_data_server("data", adm_name, in_files)
     mod_matrikkel_screen_server("screen_main", in_files)
-    mod_report_server("report")
+    mod_report_server("report",in_files)
   })
 }

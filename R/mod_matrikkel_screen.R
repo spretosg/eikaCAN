@@ -327,6 +327,13 @@ mod_matrikkel_screen_server <- function(id, in_files){
         exclude_names <-c("kom_dat","parcel")
         sub_in_files<-in_files[layer_ids]
         sub_in_files <- sub_in_files[setdiff(names(sub_in_files), exclude_names)]
+        n_layers <- length(sub_in_files)
+        layer_colors <- RColorBrewer::brewer.pal(min(n_layers, 8), "Set1")
+
+        # If more than 8 layers, you can repeat or use a different palette
+        if (n_layers > 8) {
+          layer_colors <- colorRampPalette(brewer.pal(8, "Set1"))(n_layers)
+        }
         #print(names(sub_in_files))
         # Get centroid (returns POINT geometry)
         center <- st_centroid(st_union(parcels_sel))  # st_union ensures single geometry
@@ -334,8 +341,10 @@ mod_matrikkel_screen_server <- function(id, in_files){
         # Extract coordinates
         center_coords <- st_coordinates(center)
 
-        ## the map ev, some wms layers?
+
+        ## the map
         output$map_parcel <- renderLeaflet({
+
           if(!is.null(polygons)){
 
 
@@ -356,33 +365,65 @@ mod_matrikkel_screen_server <- function(id, in_files){
             for(i in seq_along(sub_in_files)){
               layer <- sub_in_files[[i]]
               layer_id <- names(sub_in_files[i])
+              this_color <- layer_colors[i]
+
 
               # Append to overlay group vector
               overlay_groups <- c(overlay_groups, layer_id)
 
-              if (inherits(layer, "sf")) {
                 base_map <- base_map %>%
                   addPolygons(data = layer,
                               group = layer_id,
-                              fillColor = "blue",
+                              fillColor = this_color,
                               weight = 1,
-                              opacity = 1,
+                              opacity = 0.5,
                               color = 'white',
                               fillOpacity = 0.5)
-              } else if (inherits(layer, "SpatRaster")) {
-                base_map <- base_map %>%
-                  addRasterImage(layer,
-                                 group = layer_id,
-                                 opacity = 0.7,
-                                 project = TRUE)
+
               }
 
-            }
+
+            #
+            # if(nrow(distances%>%filter(valuable_areas == "Naturskog" & min_dist_m==0))==1){
+            #   raster_layer <- in_files$nat_skog
+            #   raster_layer1 <- raster_layer == 1  # this creates a logical raster (TRUE where value == 1)
+            #
+            #   # Apply the mask to original raster (optional, for retaining values)
+            #   nat_skog_subset <- mask(raster_layer, raster_layer1, maskvalue = 0)
+            #   base_map <- base_map %>%
+            #     addRasterImage(nat_skog_subset,
+            #                    colors = "#addd8e",
+            #                    group = c("Naturskog"),
+            #                    opacity = 0.7,
+            #                    project = TRUE)
+            #   overlay_groups <- c(overlay_groups, "Naturskog")
+            #
+            # }
+            #
+            #
+            # if(nrow(distances%>%filter(valuable_areas == "Myr eller våtmark" & min_dist_m==0))==1){
+            #   raster_layer <- in_files$myr
+            #   raster_layer1 <- raster_layer == 1  # this creates a logical raster (TRUE where value == 1)
+            #
+            #   # Apply the mask to original raster (optional, for retaining values)
+            #   myr_subset <- mask(raster_layer, raster_layer1, maskvalue = 0)
+            #   base_map <- base_map %>%
+            #     addRasterImage(myr_subset,
+            #                    colors = "#9ebcda",
+            #                    group = c("Myr eller våtmark"),
+            #                    opacity = 0.7,
+            #                    project = TRUE)
+            #   overlay_groups <- c(overlay_groups, "Myr eller våtmark")
+            #
+            # }
+
+
+
             base_map <- base_map %>%
               addPolygons(color = "orange",fillColor = "green", weight = 3, smoothFactor = 0.5,
                           opacity = 1.0, fillOpacity = 0)%>%
               addPolygons(data = polygons ,color="red",  fillColor = "red", weight = 0, smoothFactor = 0.5,
-                          opacity = 1.0,fillOpacity = 0.8, label = ~ layer_id,  # Show layer_id in label
+                          opacity = 1.0,fillOpacity = 0.5, label = ~ layer_id,
                           highlightOptions = highlightOptions(weight = 1, color = "white", bringToFront = TRUE),
                           group = "Klima-/naturrisiko område")%>%
               addLegend(position = "topright",
@@ -400,7 +441,10 @@ mod_matrikkel_screen_server <- function(id, in_files){
               setView(lng = center_coords[1], lat = center_coords[2], zoom = 14)
 
 
-          }else{          base_map<-leaflet(parcels_sel) %>%
+
+            }else{
+
+            base_map<-leaflet(parcels_sel) %>%
             addProviderTiles(providers$Esri.WorldImagery,options = tileOptions(minZoom = 8, maxZoom = 18),group = "World image")%>%
             addWMSTiles(
               baseUrl = "https://wms.geonorge.no/skwms1/wms.norges_grunnkart?service=wms&request=getcapabilities",
@@ -422,6 +466,8 @@ mod_matrikkel_screen_server <- function(id, in_files){
           }
 
         })
+
+
 
         # here calculate the stats for the parcel
         #E4-5_10
@@ -449,8 +495,8 @@ mod_matrikkel_screen_server <- function(id, in_files){
         nat_loss_m2 <- sum(sapply(results, function(x) x$m2_nat_loss))
 
         #m2 of parcel that is lost for climate important areas E1...
-        klim_loss_m2<-unlist(distances%>%filter(as.integer(min_dist_m) == 0 & valuable_areas %in% klim_vec)%>%select(intersect_area_m2))
-        klim_loss_m2<-sum(as.integer(klim_loss_m2))
+        klim_loss_m2<-polygons%>%filter(layer_id %in% klim_vec)%>%st_union()%>%st_area()
+        klim_loss_m2<-as.integer(klim_loss_m2)
 
 
         # LULC alteration
@@ -504,7 +550,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
             valueBox(
               value = icon("check"),  # Display the area value
               subtitle = "utenfor område med potensiell naturrisiko",
-              icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
+              #icon = icon("leaf"),  # Choose an appropriate FontAwesome icon
               color = "olive",
               width = 12
             )
@@ -582,31 +628,94 @@ mod_matrikkel_screen_server <- function(id, in_files){
             html = TRUE,
             text = tags$div(
               br(),
-              selectInput(ns("E4.IRO1_03"),"Har prosjekteier foretatt en Unngå-Flytte-Forbedre (UFF) vurdering av prosjektlokalisering og utforming?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_03"),
+                          label = HTML(
+                            'Har prosjekteier foretatt en Unngå-Flytte-Forbedre (UFF) vurdering av prosjektlokalisering og utforming?
+     <a href="https://rpubs.com/retospielhofer/1295853"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+       (ESRS datapunkt: E4.IRO1_03)
+     </a>'), c("","Ja","Nei"), selected = ""),
+
+
               br(),
-              selectInput(ns("E4.IRO1_04_a"),"Er prosjekteier informert om samlet tap av natur i kommunen de siste 5 årene?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_04_b"),HTML('Er prosjekteier informert om kommunens mål for arealutvikling/arealreserve/ arealbudsjett?
+                            <a href="https://rpubs.com/retospielhofer/1295917"
+              target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_04)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_04_b"),"Er prosjekteier informert om kommunens mål for arealutvikling/arealreserve/ arealbudsjett?",c("","Ja","Nei"), selected = ""),
+              textInput(ns("E4.IRO1_04_c"),HTML('Hvordan vurderer prosjekteier Eika.CAN prosjektets konsekvenser for naturverdier sett i forhold til kommunens historiske naturtap ?
+              <a href="https://rpubs.com/retospielhofer/1295917"
+              target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_04)
+                          </a>')),
               br(),
-              textInput(ns("E4.IRO1_04_c"),"Hvordan vurderer prosjekteier Eika.CAN prosjektets konsekvenser for naturverdier sett i forhold til kommunens historiske naturtap ?"),
+              selectInput(ns("E4.IRO1_05_a"),
+                          label = HTML(
+                          'Har prosjekteier vurdert prosjektlokalisering ift. arealplanens bestemmelser?
+                            <a href="https://rpubs.com/retospielhofer/1295857"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_05)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_05_a"),"Har prosjekteier vurdert prosjektlokalisering ift. arealplanens bestemmelser?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_05_b"),label = HTML('Har prosjekteier fått planfaglige råd om prosjektlokalisering fra kommunen?
+
+                            <a href="https://rpubs.com/retospielhofer/1295857"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_05)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_05_b"),"Har prosjekteier fått planfaglige råd om prosjektlokalisering fra kommunen?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_05_c"),label = HTML('Har prosjekteier informert naboer til eiendommen om prosjektplanen?
+                            <a href="https://rpubs.com/retospielhofer/1295857"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_05)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_05_c"),"Har prosjekteier informert naboer til eiendommen om prosjektplanen?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_06_a"),label = HTML('Har prosjekteier vurdert konsekvenser for eiere og brukere av naboeiendommer av prosjektet?
+                                          <a href="https://rpubs.com/retospielhofer/1295905"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_06)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_06_a"),"Har prosjekteier vurdert konsekvenser for eiere og brukere av naboeiendommer av prosjektet?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_06_b"),label = HTML('Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) med en konsekvensutredning av prosjektet?                                          <a href="https://rpubs.com/retospielhofer/1295905"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_06)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_06_b"),"Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) med en konsekvensutredning av prosjektet?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_07"),label = HTML('Har prosjekteier informert naboer av prosjektet om prosjektformål og -utforming?
+                                         <a href="https://rpubs.com/retospielhofer/1295909"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_07)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_07"),"Har prosjekteier informert naboer av prosjektet om prosjektformål og -utforming?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_08_a"),HTML('Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) prosjektet, spesielt ift. klimaregnskap?
+                                  <a href="https://rpubs.com/retospielhofer/1295913"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_08)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_08_a"),"Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) prosjektet, spesielt ift. klimaregnskap?",c("","Ja","Nei"), selected = ""),
+              selectInput(ns("E4.IRO1_08_b"),HTML('Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) prosjektet, spesielt ift. konsekvenser for overvannshåndtering, friluftslivs eller andre naturgoder?                                  <a href="https://rpubs.com/retospielhofer/1295913"
+        target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_08)
+                          </a>'),c("","Ja","Nei"), selected = ""),
               br(),
-              selectInput(ns("E4.IRO1_08_b"),"Har prosjekteier utført en analyse av tiltak for å Unngå-Flytte-Forbedre (UFF) prosjektet, spesielt ift. konsekvenser for overvannshåndtering, friluftslivs eller andre naturgoder?",c("","Ja","Nei"), selected = ""),
-              br(),
-              textInput(ns("E4.IRO1_15"),"Hvordan vil prosjekteier Unngå-Flytte-Forbedre (UFF) prosjektet ift. naturverdiene som er identifisert i aktsomhetsvurderingen?"),
+              textInput(ns("E4.IRO1_15"),HTML('Hvordan vil prosjekteier Unngå-Flytte-Forbedre (UFF) prosjektet ift. naturverdiene som er identifisert i aktsomhetsvurderingen?
+              <a href="https://rpubs.com/retospielhofer/1295915"
+              target="_blank"
+        style="color: #007BFF; text-decoration: underline; margin-left: 5px;">
+                            (ESRS datapunkt: E4.IRO1_15)
+                          </a>')),
               br(),
               uiOutput(ns("cond_btn2"))
             ),
