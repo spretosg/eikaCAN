@@ -143,7 +143,7 @@ calc_spat_stats <- function(drawn_sf, in_files) {
   vern_list<-list(in_files$vern,
                   in_files$nat_ku,
                   in_files$inon,
-                  in_files$vassdrag,
+                  # in_files$vassdrag,
                   in_files$strand,
                   in_files$red_listed,
                   in_files$friluft,
@@ -158,7 +158,7 @@ calc_spat_stats <- function(drawn_sf, in_files) {
   vern_vector<-c("Vernområder",
                  "Natur av forvaltningsintersse",
                  "Inngrepsfrie natur",
-                 "Vassdragsnatur",
+                 # "Vassdragsnatur",
                  "Strandsone",
                  "Rød lista arter",
                  "Friluftslivsområder",
@@ -204,6 +204,7 @@ calc_spat_stats <- function(drawn_sf, in_files) {
 
     df<-as.data.frame(df)
     colnames(df)<-c("valuable_areas","min_dist","intersect","intersection_area")
+    #print(df)
 
     ################## extract overlay with lulc
     lulc_overlay <- calc_overlay(single_polygon,in_files$lulc,sum)

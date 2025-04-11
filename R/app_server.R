@@ -196,7 +196,7 @@ app_server <- function(input, output, session) {
       nat_ku = in_gpkg[[6]],
       parcel = in_gpkg[[9]],
       inon = in_gpkg[[5]] %>% dplyr::filter(vsone == "1"),
-      vassdrag = in_gpkg[[4]],
+      #vassdrag = in_gpkg[[4]],
       strand = in_gpkg[[3]],
       myr = in_rast[[2]],
       red_listed = in_gpkg[[8]],

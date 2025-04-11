@@ -142,9 +142,13 @@ mod_matrikkel_screen_server <- function(id, in_files){
       results<-results()
       if(nrow(parcels_sel())>0 & !is.null(results)){
         # Extract intersections E4.IRO-1_14
-        distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))%>%group_by(valuable_areas)%>%
+        distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))
+        print("here")
+
+        distances<-distances%>%group_by(valuable_areas)%>%
           summarize(min_dist_m = min(as.integer(min_dist),na.rm = T),
                     intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
+        print("there")
 
 
         distances$valuable_areas<-unlist(distances$valuable_areas)
@@ -181,14 +185,24 @@ mod_matrikkel_screen_server <- function(id, in_files){
       results<-results()
       req(distances())
       distances<-distances()
+      print(distances)
       distances$min_dist_m<-as.integer(distances$min_dist_m)
 
       if(max(distances$min_dist_m,na.rm = T)>0 & !is.null(distances)){
         inter_poly <- do.call(rbind, lapply(results, function(x) x$polygon_geom_df))
-        inter_poly <- inter_poly %>%
+        print(inter_poly)
+        print("here2")
+        if(!is.null(inter_poly)){
+                  inter_poly <- inter_poly %>%
           group_by(layer_id) %>%
           summarize(geometry = st_union(geom)) %>%
           ungroup()%>%st_set_crs( 25833)
+        print("here3")
+        }else{
+          inter_poly<-NULL
+          print("here4")
+        }
+
 
       }else{
         inter_poly<-NULL
@@ -256,7 +270,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
                 bslib::value_box(
                   title = NULL,
                   value = NULL,
-                  h4("Vær oppmerksom på at kartdataene som ligger til grunn for beregningen av klima- og naturrisiko, er de beste tilgjengelige dataene i Norge, men at de kan inneholde feil eller unøyaktigheter. Som en del av aktsomhetsvudering er det derfor viktig å vøre bevisst på dette, sammenligne resultatene med lokale kilder og rapportere dette nedover om nødvendig."),
+                  h4("Vær oppmerksom på at kartdataene som ligger til grunn for beregningen av klima- og naturrisiko, er de beste tilgjengelige dataene i Norge, men at de kan inneholde feil eller unøyaktigheter. som en del av aktsomhetsvurderingen er det derfor være viktig å sjekke kart med lokalkunnskap om området. Avvik mellom lokalkunnskap og kartene kan rapporteres nederst på siden"),
                   h5("En slik rapportering kan gjøres nederst på siden."),
                   theme = bslib::value_box_theme(
                     bg = "#F08080",       # Light grey background
@@ -310,7 +324,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
                   value = NULL,
                   div(
                     style = "font-size: 20px; padding: 10px;",
-                  textInput(ns("report_data_layer"),label = "Hvis behov, beskriv kort usikkerheten eller feilen som oppstår i ett eller flere datasett, og som fører til potensielt feilaktige risikoberegninger.")),
+                  textInput(ns("report_data_layer"),label = "Digitale kart kan ha usikkerheter eller feil. Beskriv eventuelle avvik mellom lokalkunnskap og kartdata her:")),
                   theme = bslib::value_box_theme(
                     bg = "white",       # Light grey background
                     fg = "black"
@@ -454,8 +468,9 @@ mod_matrikkel_screen_server <- function(id, in_files){
               group = "Kartverket basiskart"
             )%>%
             addPolygons(color = "green",fillColor = "green", weight = 3, smoothFactor = 0.5,
-                        opacity = 1.0, fillOpacity = 0.5)%>%
+                        opacity = 1.0, fillOpacity = 0.3, group = "Prosjektområdet" )%>%
             addLayersControl(baseGroups = c("Kartverket basiskart","World image"),
+                             overlayGroups = "Prosjektområdet",
                              options = layersControlOptions(collapsed = FALSE))%>%
             addLegend(position = "topright",
                       colors = c("green"),
@@ -495,7 +510,12 @@ mod_matrikkel_screen_server <- function(id, in_files){
         nat_loss_m2 <- sum(sapply(results, function(x) x$m2_nat_loss))
 
         #m2 of parcel that is lost for climate important areas E1...
-        klim_loss_m2<-polygons%>%filter(layer_id %in% klim_vec)%>%st_union()%>%st_area()
+        if(!is.null(polygons)){
+          klim_loss_m2<-polygons%>%filter(layer_id %in% klim_vec)%>%st_union()%>%st_area()
+        }else{
+          klim_loss_m2<-0
+        }
+
         klim_loss_m2<-as.integer(klim_loss_m2)
 
 
