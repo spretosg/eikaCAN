@@ -52,7 +52,7 @@ mod_data_ui <- function(id) {
                    "Villreinområder" = "rein",
                    "Pressområder i strandsonen"="press_strand",
                    "Inngrepsfri natur"="inon",
-                   "Vassdragsnatur"="water",
+                   #"Vassdragsnatur"="water",
                    "Utvalgte og truede naturtyper" = "nat_ku",
                    "Friluftslivsområder" = "friluft",
                    "Naturskog" = "forest"),

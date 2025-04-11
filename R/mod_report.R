@@ -10,7 +10,7 @@
 mod_report_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
-    h1("Oversikt portefølje"),
+    h1("Oversikt portefølje planlagt utbygging"),
     fluidRow(
       bslib::value_box(
         title = "",
@@ -36,7 +36,7 @@ mod_report_ui <- function(id) {
     ),
     br(),
     fluidRow(
-      h4("Areal i natur / klimarisikoområder"),
+      h4("Areal med natur- / klimarisiko"),
       column(6, plotly::plotlyOutput(ns("intersection_nat"))),
       column(6,plotly::plotlyOutput(ns("intersection_klim")))
     ),
@@ -133,7 +133,8 @@ mod_report_server <- function(id, in_files){
     # Define Risikoareal and proj_type
     natur_risiko_arealer <- data.frame(
       Risikoareal = c("Vernområder", "Natur av forvaltningsintersse", "Inngrepsfrie natur",
-                      "Vassdragsnatur", "Strandsone", "Rød lista arter", "Friluftslivsområder"),
+                      "Vassdragsnatur",
+                      "Strandsone", "Rød lista arter", "Friluftslivsområder"),
       proj_type = rep(c("naering", "bolig", "landbruk"), each = 7),
       areal = numeric(21)  # Placeholder for areal values
     )
@@ -256,7 +257,7 @@ mod_report_server <- function(id, in_files){
     output$klima <- shinydashboard::renderValueBox({
       valueBox(
         value = 13,  # Display the area value
-        subtitle = "Prosjekter har et høyt klimarisiko",
+        subtitle = "Prosjekter har et høy klimarisiko",
         icon = icon("cloud"),  # Choose an appropriate FontAwesome icon
         color = "blue"
       )
@@ -265,7 +266,7 @@ mod_report_server <- function(id, in_files){
       valueBox(
         #value = nrow(report_df%>%filter(n_intersection_val_nat!=0)),
         value = 18,# Display the area value
-        subtitle = "Prosjekter har et høyt naturrisiko",
+        subtitle = "Prosjekter har et høy naturrisiko",
         icon = icon("leafe"),  # Choose an appropriate FontAwesome icon
         color = "olive"
       )
