@@ -33,9 +33,12 @@ mod_matrikkel_screen_ui <- function(id) {
                  value = "",
                  h3("Med bruks- og gårdsnummer bestemmer matrikkelenehet og lokaliseres prosjektområdet. Deretter bergegnes klima- og naturrisiko eksplisitt for ditt prosjekt. Til slutt kan du lagre statistikk til rapporterings data base og csv filer."),
                  br(),
+                 h5(tags$a(href = "https://seeiendom.kartverket.no/", "Du finner disse numrene ved å gjøre et adressesøk", target = "_blank")
+                    ),
+                 br(),
                  div(
                    style = "font-size: 22px; padding: 10px;",
-                   textInput(ns("eika_id"), "Saksnummer")
+                   textInput(ns("eika_id"), "Saksnummer (f.eks. bankens, kredittportalen)")
                  ),
                  br(),
                  div(
@@ -143,13 +146,10 @@ mod_matrikkel_screen_server <- function(id, in_files){
       if(nrow(parcels_sel())>0 & !is.null(results)){
         # Extract intersections E4.IRO-1_14
         distances <- do.call(rbind, lapply(results, function(x) x$distances_intersection))
-        print("here")
 
         distances<-distances%>%group_by(valuable_areas)%>%
           summarize(min_dist_m = min(as.integer(min_dist),na.rm = T),
                     intersect_area_m2 = sum(as.integer(unlist(intersection_area)), na.rm=T))
-        print("there")
-
 
         distances$valuable_areas<-unlist(distances$valuable_areas)
         ## add skog and myr
@@ -377,17 +377,44 @@ mod_matrikkel_screen_server <- function(id, in_files){
             overlay_groups <- c("Klima-/naturrisiko område")
 
             for(i in seq_along(sub_in_files)){
+
+              lookup <- list(
+                "inon" = "Inngrepsfri natur",
+                "nat_ku" = "Truede & sårbare naturtyper",
+                "vern" = "Vernområder",
+                "strand" = "Strandsone i pressområder",
+                "myr" = "Myr",
+                "red_listed" = "Rødliste-arter",
+                "friluft" = "Viktige og svært viktige friluftslivsområder",
+                "kvikk" = "Kvikkleire risikoområde",
+                "flom_klima" = "Sone 200-årsflom klimaendring",
+                "nat_skog" = "Naturskog",
+                "flom_20" = "Sone 20-årsflom",
+                "flom_200" = "Sone 200-årsflom",
+                "flom_1000" = "Sone 1000-årsflom",
+                "flom_akt" = "Flom aktsomhetsområder",
+                "skred_100" = "Sone 100-årsskred",
+                "skred_1000" = "Sone 1000-årsskred"
+              )
               layer <- sub_in_files[[i]]
-              layer_id <- names(sub_in_files[i])
+              layer_id <- names(sub_in_files)[i]
+
+              # Get label from lookup
+              label <- lookup[[layer_id]]
+
+              # Optionally add it as a new column to the sf object
+              layer$layer_label <- label
+
+
               this_color <- layer_colors[i]
 
 
               # Append to overlay group vector
-              overlay_groups <- c(overlay_groups, layer_id)
+              overlay_groups <- c(overlay_groups, label)
 
                 base_map <- base_map %>%
                   addPolygons(data = layer,
-                              group = layer_id,
+                              group = label,
                               fillColor = this_color,
                               weight = 1,
                               opacity = 0.5,

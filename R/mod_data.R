@@ -28,7 +28,7 @@ mod_data_ui <- function(id) {
                title = "",
                value = "",
                h3("Her kan du se ulike kart som viser forekomsten av viktig natur. Hvis et prosjekt ligger innenfor et av disse områdene, er prosjektet merket som «risikolokalitet for tap av viktig natur», basert på ",
-                  tags$a(href = "https://www.regjeringen.no/no/dokumenter/nasjonale-og-vesentlige-regionale-interesser-pa-miljoomradet--klargjoring-av-miljoforvaltningens-innsigelsespraksis/id2504971/?q=T-2/16", "nasjonale retningslinjer", target = "_blank"), ". Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med gjeldende kommunale planer og forskrifter."),
+                  tags$a(href = "https://www.regjeringen.no/no/dokumenter/nasjonale-forventninger-til-regional-og-kommunal-planlegging-20232027/id2985764/", "nasjonale forvetninger til regional og kommunal planlegging", target = "_blank"), " eller på ",tags$a(href = "https://www.regjeringen.no/no/dokumenter/nasjonale-og-vesentlige-regionale-interesser-pa-miljoomradet--klargjoring-av-miljoforvaltningens-innsigelsespraksis/id2504971/?q=T-2/16", "T-2/16 Statsforvalter innsigelsesgrunnlag", target = "_blank"), ". Det er imidlertid viktig å merke seg at dette er ikke nødvendigvis i samsvar med gjeldende kommunale planer og forskrifter."),
                theme = bslib::value_box_theme(bg = "#D3D3D3", fg = "black"),
                showcase= bsicons::bs_icon("book")
              )
@@ -45,17 +45,23 @@ mod_data_ui <- function(id) {
                    "Velg et kartlag for viktig natur ",
                    style = "color: black;"
                  ),
-                 choices = c(
-                   "",
-                   "Naturvernområder" = "nat_vern",
-                   "Myrområder" = "myr",
-                   "Villreinområder" = "rein",
-                   "Pressområder i strandsonen"="press_strand",
-                   "Inngrepsfri natur"="inon",
-                   #"Vassdragsnatur"="water",
-                   "Utvalgte og truede naturtyper" = "nat_ku",
-                   "Friluftslivsområder" = "friluft",
-                   "Naturskog" = "forest"),
+                 choices = list(
+                   "Nasjonale forvetninger til regional og kommunal planlegging" = list(
+                     "",
+                     "Naturvernområder" = "nat_vern",
+                     "Inngrepsfri natur"="inon"
+                   ),
+                   "T-2/16 Statsforvalter innsigelsesgrunnlag" = list(
+                     "Myr" = "myr",
+                     "Villreinområder" = "rein",
+                     "Strandsone i pressområder"="press_strand",
+                     "Rødliste-arter" = "red_listed",
+                     #"Vassdragsnatur"="water",
+                     "Truede & sårbare naturtyper" = "nat_ku",
+                     "Viktige og svært viktige friluftslivsområder" = "friluft",
+                     "Naturskog" = "forest"
+                   )
+  ),
                  selected = ""
                ),
                actionLink(ns("info_button"), label = NULL, icon = icon("info-circle"),
@@ -109,8 +115,8 @@ mod_data_server <- function(id, adm_unit, in_files){
     observeEvent(input$info_button, {
       showModal(modalDialog(
         title = "Viktig natur",
-        "Omfattes følgende kartlagte områder: ",
-        h5("-Myr"),
+        "For mer informasjon se på ",
+        tags$a(href = "https://rpubs.com/retospielhofer/1292829", "teknisk beskrivelse av verktøy (seksjon data)", target = "_blank"),
         easyClose = TRUE,
         footer = modalButton("Close")
       ))
@@ -121,6 +127,7 @@ mod_data_server <- function(id, adm_unit, in_files){
       bbox<-in_files$bbox
       myr_dat<-in_files$myr
       myr_dat[myr_dat != 1] <- NA
+      red_listed_dat<-in_files$red_listed
 
     wms_url <- list(
       "inon" = "https://kart.miljodirektoratet.no/geoserver/inngrepsfrinatur/wms",
@@ -162,6 +169,7 @@ mod_data_server <- function(id, adm_unit, in_files){
 
     # Placeholder for layer descriptions
     layer_description_short <- list(
+      "red_listed" = "",
       "nat_vern" = "Et verneområde er et område på land eller i vann hvor naturen skal vernes mot menneskelig inngrep og større forstyrrelser. I verden og i Norge er arealendringer gjennom menneskelige inngrep den største årsaken til mindre biologisk mangfold. Naturmangfoldloven definerer hvordan de forskjellige typene naturvernområder er beskyttet og hvilken aktivitet er tillat eller forbudt. (Beskriv de ulike typene og forskjellen på vern av disse) (Hvor mye av Norge er i et verneområde) I Norge finnes det mer enn 3300 verneområder som verner 17,7 % av Norges fastland og 4.5% av sjøarealet.",
       "nat_ku" = "Før en utbygging av f.eks. veier, større bygninger eller næringsområder skal utbygger gjøre en konsekvensvurdering for påvirkning på ulike naturtyper. Miljødirektoratet har samlet de viktigste naturtypene i et kart for å gjør det enklere å gjøre en konsekvensvurdering. Likevel viste NRK-saken Norge i rødt, hvitt og grått at vi fortsatt bygger på truet natur og natur som er sentrale levesteder for truede arter. Eksempler på truede naturtyper er slåtteeng, kystgranskog, grisehalekorallbunn og kalksjø . Nesten halvparten av alle truede arter har sitt leveområde helt eller delvis i skog",
       "press_strand" = "«Strandsonen» er områder innen 100 meter fra sjøen, og langs større vassdrag. I dag er naturen i strandsonen mange steder under press grunnet  utbygging. Dette påvirker befolkningens mulighet til å bruke strandsonen til friluftsliv, og det kan i tillegg ramme planteliv og dyreliv. En tredjedel av Norges strandsone er påvirket av menneskelig aktivitet (SSB). ",
@@ -174,6 +182,7 @@ mod_data_server <- function(id, adm_unit, in_files){
     )
 
     layer_description_long <- list(
+      "red_listed" = "",
       "nat_vern" = "For å opprettholde og forbedre de viktige økosystemtjenestene og økosystemtilstandene på lang sikt, opprettes det nasjonalparker og naturreservater. Disse har som mål å styrke det biologiske mangfoldet, beskytte og bevare verdifulle naturmiljøer og restaurere naturlige leveområder for truede arter. Vern, bevaring og restaurering av natur skal motvirke tilbakegang av leveområder og dermed tilbakegang av dyre- og plantearter. Den internasjonale naturvernunionen (International Union for Conservation of Nature – IUCN) utvikler globale kriterier og standarder for å inndele verneområder og definere vernetiltak for å ta vare på naturen. Den internasjonale klassifikasjon er litt forskjellige fra det norske systemet. I Norge finnes det mer enn 3300 verneområder som verner 17,7 % av fastlandet i Norge og 17 marine områder som verner 4.5% sjøarealet innenfor Norges territoriale grense. Hovedsakelig vernet er høyfjellsområder , mens skog, hav- og kystområder er underrepresentert. Vi ser også at over hele verden er særlig områder som har lavere økonomisk verdi blir vernet. Dette resulterer i vern av arealer som ligger i mer avsidesliggende områder med lite menneskelig påvirkning, men som ikke nødvendigvis beskytter det som er verdifullt med tanke på det biologiske mangfoldet.",
       "nat_ku" = "«Naturtyper av forvaltningsinteresse» er et samlebegrep om naturtyper som tillegges vekt av forvaltningen ved behandling av konsekvensutredninger (KU). Det er naturtyper som selv er truet eller utvalgt fordi de er leveområder for truede arter.  I NRK saken ble det kalt også «utvalgte eller rødlistede naturtyper». Rødlister er laget for arter og naturtyper som er truet i Norge. Dette består av en rekke naturtyper som er spesielt viktige av ulike grunner:
 •	naturtyper som Miljødirektoratet har valgt ut for kartlegging fordi de enten er truet eller nær truet
@@ -276,6 +285,19 @@ Naturskog er viktig fordi veldig mange rødlistede arter finnes i slike skoger. 
             group = "Kartverket basiskart"
           )%>%
           addRasterImage(myr_dat, colors = "blue", opacity = .6)
+
+      }else if(selected_layer == "red_listed"){
+        leaflet::leafletProxy("data_map") %>%
+          leaflet::clearTiles()%>%
+          leaflet::clearControls()%>%
+          leaflet::addWMSTiles(
+            baseUrl = "https://wms.geonorge.no/skwms1/wms.norges_grunnkart?service=wms&request=getcapabilities",
+            layers = "norges_grunnkart",
+            options = WMSTileOptions(format = "image/png", transparent = TRUE),
+            attribution = "© Artsdatabanken",
+            group = "Kartverket basiskart"
+          )%>%
+          leaflet::addPolygons(data=red_listed_dat)
 
       }else{
 

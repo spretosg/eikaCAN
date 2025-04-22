@@ -43,6 +43,23 @@ return_inters_layer_id<-function(geom,layers){
       return(NULL)
     } else {
       layer_id<-names(layers[i])
+      # lookup <- list(
+      #   "inon" = "this is A",
+      #   "strand" = "this is B",
+      #   "myr" = "this is C",
+      #   "red_listed" = "this is D",
+      #   "friluft" = "",
+      #   "kvikk" = "",
+      #   "flom_klima" = "",
+      #   "nat_skog" = "",
+      #   "flom_20" = "",
+      #   "flom_200" = "",
+      #   "flom_1000" = "",
+      #   "flom_akt" = "",
+      #   "skred_100" = "",
+      #   "skred_1000" = ""
+      # )
+      # layer_id <- unlist(lookup[layer_id])
     }
   })
 
@@ -156,12 +173,12 @@ calc_spat_stats <- function(drawn_sf, in_files) {
                   in_files$skred_1000,
                   in_files$flom_akt)
   vern_vector<-c("Vernområder",
-                 "Natur av forvaltningsintersse",
-                 "Inngrepsfrie natur",
+                 "Truede & sårbare naturtyper”",
+                 "Inngrepsfri natur",
                  # "Vassdragsnatur",
-                 "Strandsone",
-                 "Rød lista arter",
-                 "Friluftslivsområder",
+                 "Strandsone i pressområder",
+                 "Rødliste-arter",
+                 "Viktige og svært viktige friluftslivsområder",
                  "Sone 200-årsflom klimaendring",
                  "Kvikkleire risikoområde",
                  "Sone 20-årsflom",
