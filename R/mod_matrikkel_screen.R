@@ -35,6 +35,8 @@ mod_matrikkel_screen_ui <- function(id) {
                  br(),
                  h5(tags$a(href = "https://seeiendom.kartverket.no/", "Du finner disse numrene ved å gjøre et adressesøk", target = "_blank")
                     ),
+                 h5(tags$a(href = "https://rpubs.com/retospielhofer/1293207", "Se på bruksanvisningen avsnitt 3.1 for noen eksempler", target = "_blank")
+                 ),
                  br(),
                  div(
                    style = "font-size: 22px; padding: 10px;",

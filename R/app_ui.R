@@ -42,7 +42,7 @@ app_ui <- function(request) {
               tags$li(class = "dropdown",
                       style = "display: flex; gap: 15px; align-items: center; padding-right: 15px;",
                       actionLink("help_button", label = NULL, icon = icon("question-circle"),
-                                 style = "font-size: 20px;"),
+                                 style = "font-size: 20px;",onclick = "window.open('https://rpubs.com/retospielhofer/1293207/', '_blank')"),
                       actionLink("info_button", label = NULL, icon = icon("info-circle"),
                                  style = "font-size: 20px;",onclick = "window.open('https://rpubs.com/retospielhofer/1292829/', '_blank')"),
                       actionLink("home_button", label = NULL, icon = icon("home"),

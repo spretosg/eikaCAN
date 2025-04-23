@@ -16,27 +16,17 @@
 #' @import shinyBS
 app_server <- function(input, output, session) {
 
+  golem_add_external_resources <- function() {
+    add_resource_path(
+      "www",
+      app_sys("app/www")
+    )}
+
   shinyjs::hide("app-content")
   # Restart the app when clicking the Home button
   observeEvent(input$home_button, {
     session$reload()  # Reloads the app (effectively restarting it)
   })
-
-  # Activate Help Module
-  observeEvent(input$help_button, {
-    showModal(modalDialog(
-      mod_help_ui("help_module"),
-      title = "Help",
-      easyClose = TRUE
-    ))
-  })
-
-  # Activate Info Module
-  observeEvent(input$info_button, {
-      mod_info_ui("info_module")
-  })
-
-
 
 
   observe({
