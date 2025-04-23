@@ -1,0 +1,9 @@
+---
+title: ''
+author: "D.Barton / R.Chudy"
+date: "2025-04-10"
+output: html_document
+---
+### E4.IRO-1_04
+
+Opplysninger om hvorvidt og hvordan systemrisiko er vurdert (biologisk mangfold og økosystemer) 

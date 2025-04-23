@@ -1,0 +1,10 @@
+---
+title: ""
+author: "D.Barton / R.Chudy"
+date: "2025-04-10"
+output: html_document
+---
+
+### E4.IRO-1_06 
+
+Opplysninger om hvorvidt og hvordan spesifikke steder, råvareproduksjon eller -innkjøp med negativ eller potensielt negativ innvirkning på berørte lokalsamfunn 

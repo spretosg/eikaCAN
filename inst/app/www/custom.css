@@ -1,0 +1,115 @@
+/* General body styling */
+body {
+  font-size: 18px;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+/* Sidebar styling */
+.main-sidebar {
+  background-color: #f2f2f2 !important; /* light gray */
+  border-right: 1px solid #ddd;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  color: #78BE20 !important;
+}
+
+.sidebar-menu > li > a {
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  color: #78BE20 !important;
+  padding: 15px 20px !important;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-menu > li:hover {
+  background-color: #e6e6e6 !important;
+  color: #e6e6e6 !important;
+}
+
+.sidebar-menu > li.active > a {
+  background-color: #e6f5e3 !important;
+  color: #78BE20 !important;
+  border-left: 5px solid #78BE20;
+}
+
+
+
+/* Box header styling */
+.box.box-solid > .box-header {
+  background-color: #78BE20 !important; /* Eika green */
+  color: white !important;
+  font-weight: bold;
+  border-bottom: none;
+}
+
+/* Content area */
+.content-wrapper {
+  background-color: #ffffff !important;
+  padding: 20px;
+}
+
+/* Header navbar styling */
+.navbar-custom-menu > .navbar-nav > li > a {
+  font-size: 20px !important;
+  color: #78BE20 !important;
+}
+
+.navbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #ddd;
+}
+
+/* App title / logo */
+.skin-blue .main-header .logo {
+  background-color: #ffffff !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+/* Footer styling */
+footer {
+  font-size: 13px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #e5e5e5;
+  color: #666;
+}
+
+/* Title Panel */
+.shiny-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #78BE20;
+}
+
+/* Sidebar override — force light gray even if skin = 'blue' */
+.skin-blue .main-sidebar,
+.skin-black .main-sidebar,
+.main-sidebar {
+  background-color: #f2f2f2 !important;
+}
+
+/* Hide the sidebar toggle button ("hamburger icon") */
+.sidebar-toggle {
+  display: none !important;
+}
+
+.sidebar-menu i {
+  color: #000000 !important;
+}
+
+.sidebar-menu i.fa-clipboard-check {
+  color: #78BE20 !important;
+}
+
+.sidebar-menu i.fa-cloud {
+  color: #78BE20 !important;
+}
+.sidebar-menu i.fa-leaf {
+  color: #78BE20 !important;
+}
+.sidebar-menu i.fa-file-lines {
+  color: #78BE20 !important;
+}
+.fa-leaf {
+  color: #78BE20 !important;
+}

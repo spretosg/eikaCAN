@@ -1,0 +1,9 @@
+---
+title: ''
+author: "D.Barton / R.Chudy"
+date: "2025-04-10"
+output: html_document
+---
+### E4.IRO-1_15
+
+Aktiviteter knyttet til lokaliteter som ligger i eller i nærheten av områder som er følsomme for biologisk mangfold, påvirker disse områdene negativt ved å føre til forringelse av naturlige habitater og leveområder for arter og til forstyrrelse av arter som det er utpekt verneområder for 

@@ -1,0 +1,10 @@
+---
+title: ""
+author: "D.Barton / R.Chudy"
+date: "2025-04-10"
+output: html_document
+---
+
+### E4.IRO-1_05 
+
+Opplysninger om hvorvidt og hvordan konsultasjoner med berørte lokalsamfunn om bærekraftsvurderinger av felles biologiske ressurser og økosystemer har blitt gjennomført.

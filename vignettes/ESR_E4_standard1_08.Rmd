@@ -1,0 +1,9 @@
+---
+title: ''
+author: "D.Barton / R.Chudy"
+date: "2025-04-10"
+output: html_document
+---
+### E4.IRO-1_08 
+
+Opplysninger om hvorvidt og hvordan negativ påvirkning på prioriterte økosystemtjenester som er relevante for berørte lokalsamfunn, kan unngås.
