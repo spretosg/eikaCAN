@@ -7,3 +7,6 @@ $run_dev.*
 ^.here$
 ^doc$
 ^Meta$
+^app\.R$
+^rsconnect$
+^\.rscignore$
