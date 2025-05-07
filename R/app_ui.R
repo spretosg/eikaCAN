@@ -27,7 +27,7 @@ app_ui <- function(request) {
         style = "background-color: white; padding: 15px 20px; border-bottom: 1px solid #ddd;",
         titlePanel(
           title = div(
-            img(src = "www/eika_logo.PNG", width = "120", style = "margin-right: 10px; vertical-align: middle;"),
+            img(src = "www/eika_logo.png", width = "120", style = "margin-right: 10px; vertical-align: middle;"),
             span("CAN - klima & naturrisiko", style = "vertical-align: middle; font-size: 26px; font-weight: bold; color: #1E3A5F;")
           ),
           windowTitle = "eika.CAN"
@@ -141,8 +141,8 @@ app_ui <- function(request) {
 
 golem_add_external_resources <- function() {
   add_resource_path(
-    "app",
-    app_sys("app")
+    "www",
+    app_sys("app/www")
   )
   add_resource_path(
     "extdata",

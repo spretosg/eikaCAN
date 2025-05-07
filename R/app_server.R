@@ -34,7 +34,7 @@ app_server <- function(input, output, session) {
       title = "Velkommen til prototypen av eika.CAN verktøy",
       easyClose = FALSE,  # Prevent closing on click outside
       footer = NULL,  # Remove default footer buttons
-          tags$img(src="www/eika_logo.PNG", width = "100%", height = "auto"),
+          tags$img(src="www/eika_logo.png", width = "100%", height = "auto"),
           h4("eika.CAN er et verktøy for aktsomhetsvurdering av vesentlig klima & naturrisiko i virksomheten"),
           br(),
           h5("Prototypen er en showcase og inneholder foreløpig ingen konkrete analyser av naturinngrep. Data og analyser vil bli definert og implementert i løpet av 2025-prosjektet."),
