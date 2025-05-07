@@ -25,17 +25,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # About Eika.CAN
 
-## What is Eika.CAN?
-Eika.CAN is a web-based tool designed for comprehensive Climate and Nature (CAN) risk assessment. As the first of its kind, Eika.Can integrates research-based information from leading institutes specializing in climate and nature research. This integration ensures that users have access to the most current and reliable data for evaluating environmental risks.
+## What is eika.CAN?
+Eika.CAN is a web-based tool designed for comprehensive Climate and Nature (CAN) risk assessment. As the first of its kind, eika.CAN integrates research-based information from leading institutes specializing in climate and nature research. This integration ensures that users have access to the most current and reliable data for evaluating environmental risks.
 
 ## Purpose of the Tool
 - **Educational Insight:** 
 It familiarizes users with existing climate and nature risks, elucidating their potential impacts on the real estate sector at large.
 - **Project Evaluation:**
  The tool enables the assessment of specific real estate projects across Norway, focusing on their environmental impact and susceptibility to climate-related risks.
-- **Sustainable Decision-Making:**  By providing detailed analyses, Eika.Can aids individuals and organizations in evaluating their real estate aspirations and portfolios, promoting responsible and sustainable practices in the industry.
+- **Sustainable Decision-Making:**  By providing detailed analyses, eika.Can aids individuals and organizations in evaluating their real estate aspirations and portfolios, promoting responsible and sustainable practices in the industry.
 
-During its pilot phase, Eika.CAN focuses on:
+During its pilot phase, eika.CAN focuses on:
 - Methodology Development:  Creating a robust framework for integrating climate and nature risk assessments for credit assessment process.  
 - Data Accessibility: ranslating complex, research-based information into user-friendly formats, making it accessible to end-users without specialized expertise.
 - Application Co-Development: Collaboratively developing the web application to ensure it meets the practical needs of its intended users, incorporating feedback to refine functionality and usability.

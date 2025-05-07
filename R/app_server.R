@@ -41,7 +41,7 @@ app_server <- function(input, output, session) {
           br(),
           h4(HTML("<b>Velg kommune prosjektet befinner seg i</b>")),
           selectInput("kommune", "",
-                      choices = c("Lillestrøm", "Verdal", "Åfjord")),
+                      choices = list("Lillestrøm" = "lillestrom", "Verdal"="verdal", "Åfjord"="afjord")),
           actionButton("confirm_btn","Til aktsomhetsvurdering"),
           br(),
           br(),

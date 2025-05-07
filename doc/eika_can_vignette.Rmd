@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 # Background
 Facing climate change and nature loss, reflecting on the interlinked climate-nature crisis, calls actions in different economic sectors. To enhance corporate transparency, investor confidence and finally more sustainable practices across different sectors, the European Sustainability Reporting Standards (ESRS) under the Corporate Sustainability Reporting Directive (CSRD) have been established. The standard requires estimation and reporting regarding the companies effect on environment and society.
 
-The following application (CAN tool), at the proof of concept (POC) stage, facilitates reporting and tracking impacts of building activities on climate and nature. Thus, climate effects (E1) and natue effects (E4) of the ESRS are partially covered with the tool.
+The following application (CAN tool), at the proof of concept (POC) stage, facilitates reporting and tracking impacts of building activities on climate and nature. Thus, climate (E1) and nature risks (E4) of the ESRS are partially covered with the tool.
 
 ## Novelty
 The tool uses spatial explicit data of the area of building activity (plot or region of impact) and locally valid climate and nature data. Consequently, the reporting of climate and nature impact summarizes project-based impact estimates.
@@ -30,7 +30,7 @@ The tool uses spatial explicit data of the area of building activity (plot or re
 * Facilitate reporting of a whole project portfolio
 
 # Data
-To calculate potential risk exposure of climate change and impacts on valuable nature of specific projects, local valid and high resolution data layers are used:
+To calculate potential risk exposure of climate change and impacts on valuable nature of specific projects, local valid and high resolution data layers are used. However, in the pilot phase of this project, data is only available for Åfjord, Lillestrøm and Verdal. 
 
 ## General data
 This data includes information about the target municipalities and the plots to locate projects
@@ -76,7 +76,7 @@ data3 <- data.frame(
 kable(data3, format = "markdown")
 ```
 
-The data was partitioned by municipality
+The data was partitioned by the three case study municipalities (Åfjord, Lillestrøm and Verdal)
 
 
 # Calculations

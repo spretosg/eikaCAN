@@ -118,7 +118,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
     parcels_sel<-eventReactive(input$confirm,{
       conc_num<-paste0(input$gards_nr,"/",input$bruks_nr)
-      print(input$teig_nr)
+      #print(input$teig_nr)
       if(!is.na(input$teig_nr)){
         parcels_sel<-parcel%>%filter(matrikkeln == conc_num & teigId ==input$teig_nr)
       }else{
@@ -187,22 +187,22 @@ mod_matrikkel_screen_server <- function(id, in_files){
       results<-results()
       req(distances())
       distances<-distances()
-      print(distances)
+      #print(distances)
       distances$min_dist_m<-as.integer(distances$min_dist_m)
 
       if(max(distances$min_dist_m,na.rm = T)>0 & !is.null(distances)){
         inter_poly <- do.call(rbind, lapply(results, function(x) x$polygon_geom_df))
-        print(inter_poly)
-        print("here2")
+       # print(inter_poly)
+        #print("here2")
         if(!is.null(inter_poly)){
                   inter_poly <- inter_poly %>%
           group_by(layer_id) %>%
           summarize(geometry = st_union(geom)) %>%
           ungroup()%>%st_set_crs( 25833)
-        print("here3")
+        #print("here3")
         }else{
           inter_poly<-NULL
-          print("here4")
+          #print("here4")
         }
 
 
@@ -517,7 +517,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         #E4-5_10
 
         tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
-        print(tot_proj_area_m2)
+        #print(tot_proj_area_m2)
 
         ## climate vector for filtering nature and climate distances
         klim_vec<-c("Sone 200-årsflom klimaendring",
@@ -849,7 +849,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
         if(nrow(parcels_sel())>0){
           #tot area
           tot_proj_area_m2 <- sum(sapply(results, function(x) x$project_area_m2))
-          print(tot_proj_area_m2)
+          #print(tot_proj_area_m2)
 
           #distances & intersections for reporting
           # Pivot Wider
@@ -863,7 +863,7 @@ mod_matrikkel_screen_server <- function(id, in_files){
 
           lulc_wide <- lulc_stats%>%select(label,area_m2)%>%
             tidyr::pivot_wider(names_from = label, values_from = area_m2, names_sep = "_")
-          print(lulc_wide)
+         # print(lulc_wide)
 
           klim_vec<-c("Flomsoner 200år klima","Kvikkleire risikoområde")
           #easy number to check number of intersections nature
