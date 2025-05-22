@@ -63,13 +63,13 @@ mod_matrikkel_screen_ui <- function(id) {
                    numericInput(ns("bruks_nr"), "Bruksnummer", NA, min = 1, step = 1)
                  ),
                  br(),
-                 tags$div(
-                   style = "font-size: 20px; padding: 10px;",
-                   numericInput(ns("teig_nr"),"Teignummer",NULL, min = 1, step = 1),
-                   actionLink(ns("info_teig"), label = NULL, icon = icon("info-circle"),
-                              style = "font-size: 20px; color:  #78BE20; margin-left: 10px;"),
-                   style = "display: flex; align-items: center;"
-                 ),
+                 # tags$div(
+                 #   style = "font-size: 20px; padding: 10px;",
+                 #   numericInput(ns("teig_nr"),"Teignummer",NULL, min = 1, step = 1),
+                 #   actionLink(ns("info_teig"), label = NULL, icon = icon("info-circle"),
+                 #              style = "font-size: 20px; color:  #78BE20; margin-left: 10px;"),
+                 #   style = "display: flex; align-items: center;"
+                 # ),
                  uiOutput(ns("cond_btn")),
                  theme = bslib::value_box_theme(bg = "#D3D3D3", fg = "black"),
                  showcase= bsicons::bs_icon("book"),
@@ -89,14 +89,14 @@ mod_matrikkel_screen_server <- function(id, in_files){
     ns <- session$ns
 
     #info teig - matrikkel
-    observeEvent(input$info_teig, {
-      showModal(modalDialog(
-        title = "Matrikkel med flere teig",
-        h4("Husk at en matrikkel kan inneholde flere teiger, så hvis det er mulig, kan du også definere teignummer. Hvis ikke, beregnes risikoen for hele matrikkelen og eventuelt flere teiger."),
-        easyClose = TRUE,
-        footer = modalButton("Close")
-      ))
-    })
+    # observeEvent(input$info_teig, {
+    #   showModal(modalDialog(
+    #     title = "Matrikkel med flere teig",
+    #     h4("Husk at en matrikkel kan inneholde flere teiger, så hvis det er mulig, kan du også definere teignummer. Hvis ikke, beregnes risikoen for hele matrikkelen og eventuelt flere teiger."),
+    #     easyClose = TRUE,
+    #     footer = modalButton("Close")
+    #   ))
+    # })
 
     #get the in_files for valuable nature
     parcel<-in_files$parcel
@@ -119,11 +119,11 @@ mod_matrikkel_screen_server <- function(id, in_files){
     parcels_sel<-eventReactive(input$confirm,{
       conc_num<-paste0(input$gards_nr,"/",input$bruks_nr)
       #print(input$teig_nr)
-      if(!is.na(input$teig_nr)){
-        parcels_sel<-parcel%>%filter(matrikkeln == conc_num & teigId ==input$teig_nr)
-      }else{
+      # if(!is.na(input$teig_nr)){
+      #   parcels_sel<-parcel%>%filter(matrikkeln == conc_num & teigId ==input$teig_nr)
+      # }else{
         parcels_sel<-parcel%>%filter(matrikkeln == conc_num)
-      }
+      # }
       parcels_sel<-sf::st_as_sf(parcels_sel)
     })
 
